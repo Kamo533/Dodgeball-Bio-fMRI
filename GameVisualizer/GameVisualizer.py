@@ -8,8 +8,8 @@ from math import cos, sin, pi
 
 
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2023-11-23_14-16-09"  # time to plot #  2023-11-09_17-40-48
-game_type = "fsm" # neat or fsm ...
+date = "2023-12-04_14-31-26"  # time to plot #  2023-11-09_17-40-48
+game_type = "neat" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
 
@@ -159,6 +159,9 @@ def drawBoard(fig, ax):
     if game_type == "neat":
         y_delta = 34
 
+
+    #print(f"Bushes (num={len(bushes)}): {sorted(bushes, key=lambda x : x[1])}")
+        
     #print(f"Bushes (num={len(bushes)}): {sorted(bushes, key=lambda x : x[1])}")
 
     boarder_and_bush_color = "#78B16A"
@@ -229,8 +232,6 @@ def drawEvents(fig, ax, pos_data:list, player_data:PlayerData):
             color=event_markers[event_type][2]
         )
         lines.append(p)
-    
-    print(event_pos_dict)
 
 
     def onClick(label):
@@ -496,8 +497,6 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
     time_slider.on_changed(update_time)
 
 
-    # xposition, yposition, width and height
-    # ax_check = plt.axes([0.05, 0.5, 0.3, 0.3])
     ax.legend(bbox_to_anchor=(-0.2, 0.5))
     plt.show()
 
@@ -507,15 +506,12 @@ player_data = PlayerData(getLogData("PlayerData"))
 position_data = PositionData(getLogData("Position"))
 results_data = getLogData("Results")
 
-#showRun(position_data, player_data, 0, True, False)
-#showFullRunWithSliderTime(position_data, player_data, game_num, False)
 
 print(f"Number of games: {player_data.numGames()}")
-#print(position_data.pos_list[0])
-#print(player_data.getStartEndTimes(0)) 
 
 if show_all_games:
     for i in range(player_data.numGames()):
+        print(f"Game {i}")
         showFullRunWithSliderTime(position_data, player_data, i)
 else:
     showFullRunWithSliderTime(position_data, player_data, game_num)
