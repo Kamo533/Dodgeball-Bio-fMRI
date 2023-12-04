@@ -8,8 +8,8 @@ from math import cos, sin, pi
 
 
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2023-11-23_14-16-09"  # time to plot #  2023-11-09_17-40-48
-game_type = "fsm" # neat or fsm ...
+date = "2023-12-04_14-07-15"  # time to plot #  2023-11-09_17-40-48
+game_type = "neat" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
 
