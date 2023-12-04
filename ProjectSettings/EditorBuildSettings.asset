@@ -32,6 +32,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Dodgeball/Scenes/EliminationNEAT.unity
     guid: 9a61685aff3d23e48b231431849ff81c
+  - enabled: 0
+    path: Assets/Dodgeball/Scenes/Elimination_Test_Env_60.unity
+    guid: bb3fb092e96bda4409c1155803a964bb
+  - enabled: 0
+    path: Assets/Dodgeball/Scenes/Elimination_Training_60.unity
+    guid: 6dcc0a784f384884bb4697909f5a9e45
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 4d91049841035460f9654c1b5e05c046,
       type: 2}
