@@ -345,7 +345,7 @@ public class DodgeBallGameController : MonoBehaviour
     }
 
     // End the game, resetting if in training mode and showing a win screen if in game mode.
-    public void EndGame(int winningTeam, float delaySeconds = 1.0f)
+    public void EndGame(int winningTeam, float delaySeconds = 2.0f) // Change here for longer delay after win to win screen
     {
         //GAME MODE
         if (ShouldPlayEffects)
@@ -406,7 +406,7 @@ public class DodgeBallGameController : MonoBehaviour
                 item.Agent.Stunned = true;
             }
         }
-        yield return new WaitForSeconds(2f - totalTimeSpent);
+        yield return new WaitForSeconds(7f - totalTimeSpent); // Change here to have longer win screen
 
         winTextGO.SetActive(false);
         ResetScene();
