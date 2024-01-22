@@ -134,6 +134,8 @@ public class DodgeBallGameController : MonoBehaviour
 
     public int MaxEnvironmentSteps = 5000;
 
+    //Random rnd = new System.Random();
+
     void Start()
     {
         if (ShouldPlayEffects)
@@ -406,7 +408,9 @@ public class DodgeBallGameController : MonoBehaviour
                 item.Agent.Stunned = true;
             }
         }
-        yield return new WaitForSeconds(7f - totalTimeSpent); // Change here to have longer win screen
+        //int random_sec = rnd.Next(10); // number between 0 and 9
+        var random_sec = Random.Range(0, 10);
+        yield return new WaitForSeconds(7f - totalTimeSpent + random_sec); // Change here to have longer win screen
 
         winTextGO.SetActive(false);
         ResetScene();
