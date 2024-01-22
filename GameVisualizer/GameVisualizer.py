@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 from math import cos, sin, pi
 
 
-
+# Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-22_11-34-07.txt
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2023-12-04_14-31-26"  # time to plot #  2023-11-09_17-40-48
-game_type = "neat" # neat or fsm ...
+date = "2024-01-22_11-34-07"  # time to plot #  2023-11-09_17-40-48
+game_type = "fsm" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
 
@@ -119,6 +119,9 @@ class PlayerData:
 
         def isResetSceneEvent(self) -> bool:
             return self.event_type == "ResetScene"
+        
+        def isEndGameEvent(self) -> bool:
+            return self.event_type == "GameEnd"
 
     def numGames(self) -> int:
         return len(list(filter(lambda event: event.isResetSceneEvent(), self.event_list))) -1
@@ -132,8 +135,11 @@ class PlayerData:
             raise Exception(f"Number of games is {self.numGames()}, cannot get times for game number {game_num}")
         
         reset_scene_list = list(filter(lambda event: event.isResetSceneEvent(), self.event_list))
+        end_game_list = list(filter(lambda event: event.isEndGameEvent(), self.event_list))
 
-        return reset_scene_list[game_num].timestamp, reset_scene_list[game_num+1].timestamp
+        # return reset_scene_list[game_num].timestamp, reset_scene_list[game_num+1].timestamp
+        return reset_scene_list[game_num].timestamp, end_game_list[game_num].timestamp + timedelta(0, 0.2)
+
 
 def colorFader(c1,c2,mix=0): #fade (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
     c1=np.array(mpl.colors.to_rgb(c1))
@@ -214,8 +220,6 @@ def drawEvents(fig, ax, pos_data:list, player_data:PlayerData):
                     if abs(event.timestamp - pos.timestamp) < time_diff:
                         closest_pos=pos
                         time_diff=abs(event.timestamp - pos.timestamp)
-                # if time_diff<0.05:
-                #     break
             
             event_pos_dict[event.event_type].append([closest_pos.pos_blue_x, closest_pos.pos_blue_y] if not enemy else [closest_pos.pos_purple_x, closest_pos.pos_purple_y])
     

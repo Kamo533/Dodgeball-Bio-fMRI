@@ -349,6 +349,9 @@ public class DodgeBallGameController : MonoBehaviour
     // End the game, resetting if in training mode and showing a win screen if in game mode.
     public void EndGame(int winningTeam, float delaySeconds = 2.0f) // Change here for longer delay after win to win screen
     {
+        gameLogger = GetComponent<GameLogger>();
+        gameLogger.LogPlayerData(11);
+
         //GAME MODE
         if (ShouldPlayEffects)
         {
@@ -367,6 +370,10 @@ public class DodgeBallGameController : MonoBehaviour
         AudioClip clipToUse1 = winningTeam == 0 ? WinSoundFX1 : LoseSoundFX1;
         AudioClip clipToUse2 = winningTeam == 0 ? WinSoundFX2 : LoseSoundFX2;
         yield return new WaitForSeconds(delaySeconds);
+
+        gameLogger = GetComponent<GameLogger>();
+        gameLogger.LogPlayerData(10);//log win screen start
+
         winTextGO.SetActive(true);
         if (ShouldPlayEffects)
         {

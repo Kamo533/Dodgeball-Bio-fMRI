@@ -121,6 +121,12 @@ public class GameLogger : MonoBehaviour
                 case 9:
                     eventType = "EnemyPickedUpBall";
                     break;
+                case 10:
+                    eventType = "WinScreenStart";
+                    break;
+                case 11:
+                    eventType = "GameEnd";
+                    break;
             }
 
             // Update all the latest values every time
