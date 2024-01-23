@@ -21,24 +21,30 @@ public class GameLogger : MonoBehaviour
     public string fileNamePosition;
     public string winstr;
 
+    public string logsFolderName;
+
     public void Start()
     {
         fileNameResults = "GameLog_Results_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
         fileNamePlayerData = "GameLog_Player_Data_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
         fileNamePosition = "GameLog_Position_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
 
-        string folderPath = Path.Combine(Application.dataPath, "Dodgeball/Logs/Position");
-        if (Directory.Exists(folderPath))
+        logsFolderName = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Dodgeball/Logs"); //"Assets/Dodgeball/Logs");
+
+
+        string folderPath = Path.Combine(logsFolderName, "Position");
+        if (!Directory.Exists(folderPath)) // Create diroctory if not exists
         {
-            string path = Path.Combine(folderPath, fileNamePosition);
-            if (!File.Exists(path))
+            Directory.CreateDirectory(folderPath);
+        }
+        string path = Path.Combine(folderPath, fileNamePosition);
+        if (!File.Exists(path))
+        {
+            using (StreamWriter writer = File.AppendText(path))
             {
-                using (StreamWriter writer = File.AppendText(path))
-                {
-                    writer.WriteLine("Timestamp,(Position_Blue_X,Position_Blue_Y),Rotation_Blue,(Position_Purple_X,Position_Purple_Y),Rotation_Purple");
-                }
-                InvokeRepeating("LogPosition", 0.0f, 0.1f); // Repeat LogPosition each 0.1 sec, start after 0 sec
+                writer.WriteLine("Timestamp,(Position_Blue_X,Position_Blue_Y),Rotation_Blue,(Position_Purple_X,Position_Purple_Y),Rotation_Purple");
             }
+            InvokeRepeating("LogPosition", 0.0f, 0.1f); // Repeat LogPosition each 0.1 sec, start after 0 sec
         }
     }
     public void LogGameInfo()
@@ -52,7 +58,7 @@ public class GameLogger : MonoBehaviour
 
         string logMessage = "Time: " + timestamp + ", Winner: " + winstr + ", Blue lives left: " + blueLives + ", Purple lives left: " + purpleLives;
         // Create the "Logs" folder if it doesn't already exist
-        string folderPath = Path.Combine(Application.dataPath, "Dodgeball/Logs/Results");
+        string folderPath = Path.Combine(logsFolderName, "Results");
         if (!Directory.Exists(folderPath))
         {
             Directory.CreateDirectory(folderPath);
@@ -68,7 +74,7 @@ public class GameLogger : MonoBehaviour
     public void LogPlayerData(int n)
     {
         string timestamp = System.DateTime.Now.ToString("HH:mm:ss.fff");
-        string folderPath = Path.Combine(Application.dataPath, "DodgeBall/Logs/PlayerData"); //Creates folder path
+        string folderPath = Path.Combine(logsFolderName, "PlayerData"); //Creates folder path
         //If folder path doesn't exist, create it
         if (!Directory.Exists(folderPath))
         {
@@ -142,7 +148,7 @@ public class GameLogger : MonoBehaviour
     {
 
         // Create the "Logs" folder if it doesn't already exist
-        string folderPath = Path.Combine(Application.dataPath, "Dodgeball/Logs/Position");
+        string folderPath = Path.Combine(logsFolderName, "Position");
         if (!Directory.Exists(folderPath))
         {
             Directory.CreateDirectory(folderPath);
