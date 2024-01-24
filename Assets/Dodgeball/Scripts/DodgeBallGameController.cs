@@ -417,7 +417,7 @@ public class DodgeBallGameController : MonoBehaviour
         }
         //int random_sec = rnd.Next(10); // number between 0 and 9
         var random_sec = Random.Range(0, 10);
-        yield return new WaitForSeconds(7f - totalTimeSpent + random_sec); // Change here to have longer win screen
+        yield return new WaitForSeconds(3f - totalTimeSpent); // Change here to have longer win screen
 
         winTextGO.SetActive(false);
         ResetScene();
