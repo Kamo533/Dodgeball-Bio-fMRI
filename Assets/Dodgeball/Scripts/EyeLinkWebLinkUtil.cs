@@ -32,7 +32,7 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 	public static string IP;  // define in init
 	public static int portForSending;  // define in init
 	public static int portForReceiving; // define in init
-	// "connection" things
+										// "connection" things
 	public static IPEndPoint remoteEndPointForSending;
 	public static IPEndPoint remoteEndPointForReceiving;
 	public static UdpClient client;
@@ -50,7 +50,7 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 	public static void openFileToWrite()
-    {
+	{
 
 
 		print("UDPSend.init()");
@@ -65,7 +65,7 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 		udpServer = new UdpClient(portForReceiving);
 		udpServer.Client.ReceiveTimeout = 3;
 
-		
+
 
 		Debug.Log("I am alive!");
 
@@ -123,9 +123,9 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 
 	public static List<float> getSampleData()
 	{
-		
+
 		receivedData = udpServer.Receive(ref remoteEndPointForReceiving);
-		
+
 		string sampleString = Encoding.UTF8.GetString(receivedData);
 		//string ttW = "sampleString  = " + sampleString;
 		//EyeLinkWebLinkUtil.writeIASLine(ttW);
@@ -161,7 +161,7 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 			return eyeData;
 		}
 
-		else 
+		else
 		{
 			return new List<float>();
 		}
@@ -181,11 +181,11 @@ public class EyeLinkWebLinkUtil : MonoBehaviour
 			if (message != "")
 			{
 
-			// use utf8 encoding to set up message
-			byte[] data = Encoding.UTF8.GetBytes(message);
+				// use utf8 encoding to set up message
+				byte[] data = Encoding.UTF8.GetBytes(message);
 
-			// send the message
-			client.Send(data, data.Length, remoteEndPointForSending);
+				// send the message
+				client.Send(data, data.Length, remoteEndPointForSending);
 			}
 		}
 		catch (Exception err)

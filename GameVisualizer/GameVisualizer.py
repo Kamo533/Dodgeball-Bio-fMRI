@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from math import cos, sin, pi
 
 
-# Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-22_11-34-07.txt
+# Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-25_16-10-52.txt
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2024-01-22_11-34-07"  # time to plot #  2023-11-09_17-40-48
+date = "2024-01-25_16-10-52"  # time to plot #  2023-11-09_17-40-48
 game_type = "fsm" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
