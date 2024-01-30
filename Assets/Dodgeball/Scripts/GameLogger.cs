@@ -12,6 +12,7 @@ public class GameLogger : MonoBehaviour
     public int purpleLives;
     public int blueBalls;
     private int _latestBlueBalls = 0;
+    private int _latestPurpleBalls = 0;
     private int _latestBlueLives = 3;
     private int _latestPurpleLives = 3;
     public int hit;
@@ -93,7 +94,7 @@ public class GameLogger : MonoBehaviour
             // Write column names if the file is empty
             if (new FileInfo(path).Length == 0)
             {
-                writer.WriteLine("Timestamp,EventType,BallsLeft,PlayerLives,EnemyLives,Corner");
+                writer.WriteLine("Timestamp,EventType,BlueBallsLeft,PurpleBallsLeft,BlueLives,PurpleLives,Corner");
                 writer.WriteLine($"{timestamp},{"Init"},{0},{3},{3},{cornerIndex}");
             }
 
@@ -101,19 +102,19 @@ public class GameLogger : MonoBehaviour
             switch (n)
             {
                 case 1:
-                    eventType = "PlayerThrewBall";
+                    eventType = "BlueThrewBall";
                     break;
                 case 2:
-                    eventType = "PlayerPickedUpBall";
+                    eventType = "BluePickedUpBall";
                     break;
                 case 3:
-                    eventType = "HitEnemy";
+                    eventType = "HitPurple";
                     break;
                 case 4:
-                    eventType = "TookDamage";
+                    eventType = "HitBlue";
                     break;
                 case 5:
-                    eventType = "EnemyThrewBall";
+                    eventType = "PurpleThrewBall";
                     break;
                 case 6:
                     eventType = "ResetScene";
@@ -122,10 +123,10 @@ public class GameLogger : MonoBehaviour
                     eventType = "S";
                     break;
                 case 8:
-                    eventType = "PlayerDash";
+                    eventType = "BlueDash";
                     break;
                 case 9:
-                    eventType = "EnemyPickedUpBall";
+                    eventType = "PurplePickedUpBall";
                     break;
                 case 10:
                     eventType = "WinScreenStart";
@@ -133,14 +134,18 @@ public class GameLogger : MonoBehaviour
                 case 11:
                     eventType = "GameEnd";
                     break;
+                case 12:
+                    eventType = "PurpleDash";
+                    break;
             }
 
             // Update all the latest values every time
             _latestBlueBalls = gameController.Team0Players[0].Agent.currentNumberOfBalls;
+            _latestPurpleBalls = gameController.Team1Players[0].Agent.currentNumberOfBalls;
             _latestBlueLives = gameController.Team0Players[0].Agent.HitPointsRemaining;
             _latestPurpleLives = gameController.Team1Players[0].Agent.HitPointsRemaining;
 
-            writer.WriteLine($"{timestamp},{eventType},{_latestBlueBalls},{_latestBlueLives},{_latestPurpleLives},{cornerIndex}");
+            writer.WriteLine($"{timestamp},{eventType},{_latestBlueBalls},{_latestPurpleBalls},{_latestBlueLives},{_latestPurpleLives},{cornerIndex}");
         }
     }
 
