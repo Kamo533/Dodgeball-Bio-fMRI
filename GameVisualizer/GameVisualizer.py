@@ -9,14 +9,14 @@ from math import cos, sin, pi
 # Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-25_16-10-52.txt
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
 date = "2024-01-30_15-46-27"  # time to plot #  2023-11-09_17-40-48
-game_type = "fsm" # neat or fsm ...
+game_type = "neat" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
 
 timestamp_format = "%H:%M:%S.%f"
 
 
-def getLogData(name) -> str:
+def getLogData(name, date=date) -> str:
     """
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
@@ -306,7 +306,7 @@ def showRun(pos_data: PositionData, player_data: PlayerData, game_num: int = 0, 
                 angles="xy",
                 color=plot_color,
                 headwidth="3",
-                label="Player"
+                label="Blue"
             )
         ax.quiver(
             [x for x, _, _ in purple_data], 
@@ -316,7 +316,7 @@ def showRun(pos_data: PositionData, player_data: PlayerData, game_num: int = 0, 
             angles="xy",
             color=plot_color,
             headwidth="8",
-            label="Agent"
+            label="Purple"
         )
     plt.show()
 
@@ -401,7 +401,7 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
         angles="xy",
         color=purple_all_color,
         headwidth="8",
-        label="Agent",
+        label="Purple",
         alpha=0.2,
         sizes=[purple_arrow_size*5 for _ in purple_data_all]
     )
@@ -417,7 +417,7 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
         edgecolor=blue_edge_color,
         linewidth=line_width,
         headwidth="3",
-        label="Player",
+        label="Blue",
         sizes=[blue_arrow_size for _ in blue_data_past]
     )
     qv_purple_past = ax.quiver(
@@ -430,7 +430,7 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
         edgecolor=purple_edge_color,
         linewidth=line_width,
         headwidth="8",
-        label="Agent",
+        label="Purple",
         sizes=[purple_arrow_size for _ in purple_data_past]
     )
     
@@ -518,6 +518,6 @@ print(f"Number of games: {player_data.numGames()}")
 if show_all_games:
     for i in range(player_data.numGames()):
         print(f"Game {i}")
-        showFullRunWithSliderTime(position_data, player_data, i)
+        # showFullRunWithSliderTime(position_data, player_data, i)
 else:
     showFullRunWithSliderTime(position_data, player_data, game_num)
