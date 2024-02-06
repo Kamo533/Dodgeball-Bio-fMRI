@@ -36,13 +36,15 @@ public class DodgeBallAgent : Agent
     [SerializeField]
     private Transform waypointsContainer;
     private List<Transform> waypoints;
-    private int currentWaypointIndex = 0;
-    private float waypointReachDistance = 7f;
+    // private int currentWaypointIndex = 0;
+    // private float waypointReachDistance = 7f;
     private float agentSpeed = 5f;
 
     [Header("SENSORS")]
-    public RayPerceptionSensor wallRaycastSensor;
-    public RayPerceptionSensor backRaycastSensor;
+    public RayPerceptionSensorComponent3D AgentRaycastSensor;
+    public RayPerceptionSensorComponent3D BackRaycastSensor;
+    public RayPerceptionSensorComponent3D BallRaycastSensor;
+    public RayPerceptionSensorComponent3D WallRaycastSensor;
 
     public bool UseVectorObs;
     public Transform HomeBaseLocation;
@@ -115,6 +117,10 @@ public class DodgeBallAgent : Agent
     //is the current step a decision step for the agent
     private bool m_IsDecisionStep;
 
+    // variables for the rule based agent (FSM)
+    private float previousRotationAngle;
+    private bool firstTest = true;
+
     [HideInInspector]
     //because heuristic only runs every 5 fixed update steps, the input for a human feels really bad
     //set this to true on an agent that you want to be human playable and it will collect input every
@@ -159,6 +165,35 @@ public class DodgeBallAgent : Agent
         {
             m_StartingPos = transform.position;
             m_StartingRot = transform.rotation;
+
+            if (useRuleBasedAgent)
+            {
+                // Debug.Log("Interesting stuff follows");
+
+                AgentRaycastSensor = transform.Find("AgentRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
+                BackRaycastSensor = transform.Find("BackRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
+                BallRaycastSensor = transform.Find("BallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
+                WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
+
+                // previousRotationAngle = 90; // 90 as in straight forward
+
+                // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
+                // //Debug.Log(WallRaycastSensor.GetObservationShape());
+                // RayPerceptionInput spec = WallRaycastSensor.GetRayPerceptionInput();
+                // RayPerceptionOutput obs = RayPerceptionSensor.Perceive(spec);
+                // //Debug.Log(spec.Angles);
+
+                // foreach (var angle in spec.Angles)
+                // {
+                //     Debug.Log(angle);
+                // }
+
+                // foreach (var o in obs.RayOutputs)
+                // {
+                //     Debug.Log(o.HitTagIndex);
+                //     Debug.Log(o.HitFraction);
+                // }
+            }
 
             //If we don't have a home base, just use the starting position.
             if (HomeBaseLocation is null)
@@ -764,23 +799,26 @@ public class DodgeBallAgent : Agent
         // Implement your custom rule-based logic to determine action values
         // Set the action values in the actionsOut.ActionSegment<float> variable
 
-        if (waypoints == null || waypoints.Count == 0)
-        {
-            InitializeWaypoints();
-        }
 
-        Vector3 targetPosition = waypoints[currentWaypointIndex].position;
-        MoveRuleBasedAgent(targetPosition, actionsOut);
+        // if (waypoints == null || waypoints.Count == 0)
+        // {
+        //     InitializeWaypoints();
+        // }
 
-        // // Check distance from waypoint
-        // float distanceToWaypoint = Vector3.Distance(transform.position, targetPosition);
-        // Debug.Log($"Distance to waypoint {currentWaypointIndex}: {distanceToWaypoint}");
 
-        if (Vector3.Distance(transform.position, targetPosition) < waypointReachDistance)
-        {
-            ShuffleWayPoints();
-            currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
-        }
+
+        // Vector3 targetPosition = waypoints[currentWaypointIndex].position;
+        MoveRuleBasedAgent(actionsOut);
+
+        // // // Check distance from waypoint
+        // // float distanceToWaypoint = Vector3.Distance(transform.position, targetPosition);
+        // // Debug.Log($"Distance to waypoint {currentWaypointIndex}: {distanceToWaypoint}");
+
+        // if (Vector3.Distance(transform.position, targetPosition) < waypointReachDistance)
+        // {
+        //     ShuffleWayPoints();
+        //     currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Count;
+        // }
     }
 
     private void InitializeWaypoints()
@@ -848,7 +886,7 @@ public class DodgeBallAgent : Agent
     }
 
 
-    private void MoveRuleBasedAgent(Vector3 targetPosition, in ActionBuffers actionsOut)
+    private void MoveRuleBasedAgent(in ActionBuffers actionsOut)
     {
 
         // //SPINNY CODE
@@ -858,31 +896,122 @@ public class DodgeBallAgent : Agent
         // var moveDir = transform.TransformDirection(new Vector3(direction.x * agentSpeed, 0, direction.z * agentSpeed));
         // m_CubeMovement.RunOnGround(moveDir);
 
-        // Movement
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        Vector3 rotationDirection = direction;
+        // RayPerceptionInput spec = WallRaycastSensor.GetRayPerceptionInput();
+        // RayPerceptionOutput obs = RayPerceptionSensor.Perceive(spec);
+        // //Debug.Log(spec.Angles);
 
-        // Detect ball and get updated target direction if ball is within a smaller radius
-        if (currentNumberOfBalls < 4)
+        // foreach (var angle in spec.Angles)
+        // {
+        //     Debug.Log(angle);
+        // }
+
+        // foreach (var o in obs.RayOutputs)
+        // {
+        //     Debug.Log(o.HitTagIndex);
+        //     Debug.Log(o.HitFraction);
+        // }
+
+
+
+
+        // OBSERVE
+        // Agent
+        RayPerceptionInput agent_spec = AgentRaycastSensor.GetRayPerceptionInput();
+        RayPerceptionOutput agent_obs = RayPerceptionSensor.Perceive(agent_spec);
+        // Back
+        RayPerceptionInput back_spec = BackRaycastSensor.GetRayPerceptionInput();
+        RayPerceptionOutput back_obs = RayPerceptionSensor.Perceive(back_spec);
+        // Ball
+        RayPerceptionInput ball_spec = BallRaycastSensor.GetRayPerceptionInput();
+        RayPerceptionOutput ball_obs = RayPerceptionSensor.Perceive(ball_spec);
+        // Wall
+        RayPerceptionInput wall_spec = WallRaycastSensor.GetRayPerceptionInput();
+        RayPerceptionOutput wall_obs = RayPerceptionSensor.Perceive(wall_spec);
+
+
+        Dictionary<float, float> rotation_angles = new Dictionary<float, float>();
+        Dictionary<float, float> movement_angles = new Dictionary<float, float>();
+
+        // float max_length = 50;
+
+
+
+        // NEW MOVEMENT DIRECTION
+        // Initialize movement_angles with angles from wall_spec and back_spec
+        foreach (float angle in wall_spec.Angles)
         {
-            float ballDetectionRadius = 5f;
-            (direction, rotationDirection) = DetectBall(direction, ballDetectionRadius);
+            movement_angles[angle] = (float)0;
+        }
+        foreach (float angle in back_spec.Angles)
+        {
+            movement_angles[angle] = (float)0;
         }
 
-        // Detect enemy player and get updated rotation direction if enemy is within radius
-        float enemyDetectionRadius = 10f;
-        rotationDirection = DetectEnemyPlayerForRotation(rotationDirection, enemyDetectionRadius);
+        if (firstTest)
+        {
+            foreach (KeyValuePair<float, float> pair in movement_angles)
+            {
+                Debug.Log($"Angle {pair.Key}: {pair.Value}");
+            }
+            firstTest = false;
+        }
 
-        // Calculate targetRotation based on the updated rotation direction
-        float targetRotation = Mathf.Atan2(rotationDirection.x, rotationDirection.z) * Mathf.Rad2Deg;
+        float max_lenght = -1;
+        float max_angle = 90;
 
-        // HANDLE ROTATION
-        float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        //Debug.Log($"OutputSize {wall_spec.OutputSize()}");
+
+        for (int i = 0; i < wall_spec.Angles.Count; i++)
+        {
+            if (wall_obs.RayOutputs[i].HitFraction > max_lenght) // TODO legge random dersom lik avstand???
+            {
+                max_lenght = wall_obs.RayOutputs[i].HitFraction;
+                max_angle = wall_spec.Angles[i];
+            }
+        }
+
+        // float max_angle = 45; //(transform.rotation.y * 180 / (float)Math.PI) - max_angle + 90;
+
+        Debug.Log($"Before rotation: {transform.eulerAngles.y}, ajust with {max_angle},     {agentSpeed}");
+
+        float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, transform.eulerAngles.y + max_angle + 90, Time.fixedDeltaTime * rotationSpeed);
         transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
+        // Debug.Log($"Move angle: {smoothRotation}, Rotation: {transform.rotation.y * 180 / Math.PI}");
 
-        // HANDLE XZ MOVEMENT
-        var moveDir = transform.TransformDirection(new Vector3(direction.x * agentSpeed, 0, direction.z * agentSpeed));
+        double z_dir = Math.Sin((max_angle) * Math.PI / 180);
+        double x_dir = Math.Cos((max_angle) * Math.PI / 180);
+
+        var moveDir = transform.TransformDirection(new Vector3((float)x_dir * agentSpeed / 5, 0, (float)z_dir * agentSpeed / 5));
         m_CubeMovement.RunOnGround(moveDir);
+
+
+
+        // // // Gammel kode
+        // // Movement
+        // Vector3 direction = (targetPosition - transform.position).normalized;
+        // Vector3 rotationDirection = direction;
+
+        // // Detect ball and get updated target direction if ball is within a smaller radius
+        // if (currentNumberOfBalls < 4)
+        // {
+        //     float ballDetectionRadius = 10f - currentNumberOfBalls * 2;
+        //     (direction, rotationDirection) = DetectBall(direction, ballDetectionRadius);
+        // }
+
+        // // Detect enemy player and get updated rotation direction if enemy is within radius
+        // float enemyDetectionRadius = 10f;
+        // rotationDirection = DetectEnemyPlayerForRotation(rotationDirection, enemyDetectionRadius);
+
+        // // Calculate targetRotation based on the updated rotation direction
+        // float targetRotation = Mathf.Atan2(rotationDirection.x, rotationDirection.z) * Mathf.Rad2Deg;
+
+        // // HANDLE ROTATION
+        // float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        // transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
+
+        // // HANDLE XZ MOVEMENT
+        // var moveDir = transform.TransformDirection(new Vector3(direction.x * agentSpeed, 0, direction.z * agentSpeed));
+        // m_CubeMovement.RunOnGround(moveDir);
     }
 
     void Update()
