@@ -118,8 +118,7 @@ public class DodgeBallAgent : Agent
     private bool m_IsDecisionStep;
 
     // variables for the rule based agent (FSM)
-    private float previousRotationAngle;
-    private bool firstTest = true;
+    private float previousMovementAngle;
 
     [HideInInspector]
     //because heuristic only runs every 5 fixed update steps, the input for a human feels really bad
@@ -175,7 +174,7 @@ public class DodgeBallAgent : Agent
                 BallRaycastSensor = transform.Find("BallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
                 WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
 
-                // previousRotationAngle = 90; // 90 as in straight forward
+                previousMovementAngle = 90; // 90 as in straight forward
 
                 // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
                 // //Debug.Log(WallRaycastSensor.GetObservationShape());
@@ -929,89 +928,108 @@ public class DodgeBallAgent : Agent
         RayPerceptionOutput wall_obs = RayPerceptionSensor.Perceive(wall_spec);
 
 
+        // DIV VARIABLES
+        float max_length = 50;
+        float ball_interest = (4 - currentNumberOfBalls) / 2;
+        float open_space_interest = 1;
+        float agent_interest = currentNumberOfBalls / 2;
+        float agent_fear = (4 - currentNumberOfBalls) / 3 * 0;
+        float rotation_in_movement_direction_interest = (float)0.1;
+        float previous_movement_interest = (float)0.05;
+
+
+        // Initialize directories with angles from wall_spec and back_spec
         Dictionary<float, float> rotation_angles = new Dictionary<float, float>();
         Dictionary<float, float> movement_angles = new Dictionary<float, float>();
 
-        // float max_length = 50;
-
-
-
-        // NEW MOVEMENT DIRECTION
-        // Initialize movement_angles with angles from wall_spec and back_spec
         foreach (float angle in wall_spec.Angles)
         {
             movement_angles[angle] = (float)0;
+            rotation_angles[angle] = (float)0;
         }
         foreach (float angle in back_spec.Angles)
         {
             movement_angles[angle] = (float)0;
         }
 
-        if (firstTest)
+
+        // NEW MOVEMENT AND ROTATION DIRECTION
+        // Agent observations
+        for (int i = 0; i < agent_spec.Angles.Count; i++)
         {
-            foreach (KeyValuePair<float, float> pair in movement_angles)
+            // Movement away from agent front
+            switch (agent_obs.RayOutputs[i].HitTagIndex)
             {
-                Debug.Log($"Angle {pair.Key}: {pair.Value}");
+                case -1: // Not hit agent or hit something else
+                    break;
+                case 0: // Hit agent
+                    // Want to look directly at agent
+
+                    break;
+                case 1: // Hit agent front
+
+                    // Want to try escape agent
+                    float escape_angle1 = (agent_spec.Angles[i] + 90) % 360;
+                    float escape_angle2 = (agent_spec.Angles[i] - 90) % 360;
+                    float escape_variation = 20;
+                    List<float> list_of_angles = movement_angles.Keys.ToList();
+                    foreach (float angle in list_of_angles)
+                    {
+                        if (
+                            (angle >= escape_angle1 - escape_variation && angle <= escape_angle1 + escape_variation) ||
+                            (angle >= escape_angle2 - escape_variation && angle <= escape_angle2 + escape_variation)
+                            )
+                        {
+                            movement_angles[angle] += agent_fear;
+                        }
+                    }
+                    break;
             }
-            firstTest = false;
+
+            // Rotation towards agent
+            if (agent_obs.RayOutputs[i].HitTagIndex != -1) // Ray hit agent or agent front
+            {
+                if (rotation_angles.ContainsKey(agent_spec.Angles[i]))
+                {
+                    rotation_angles[agent_spec.Angles[i]] += agent_interest;
+                }
+            }
         }
-
-        float max_lenght = -1;
-        float max_angle = 90;
-
-        //Debug.Log($"OutputSize {wall_spec.OutputSize()}");
-
+        // Ball, bush and wall observations
         for (int i = 0; i < wall_spec.Angles.Count; i++)
         {
-            if (wall_obs.RayOutputs[i].HitFraction > max_lenght) // TODO legge random dersom lik avstand???
+            // If observe ball
+            movement_angles[ball_spec.Angles[i]] += ball_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - ball_obs.RayOutputs[i].HitFraction) / max_length * ball_interest : 0; // If HitTagIndex == 1 then the ball is available to be picked up
+
+            // If observe wall/bush
+            movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
+
+            // Prefer continue in same direction
+            if (Math.Abs(previousMovementAngle - 90) < 0.0001 && Math.Abs(previousMovementAngle - wall_spec.Angles[i]) < 0.0001)
             {
-                max_lenght = wall_obs.RayOutputs[i].HitFraction;
-                max_angle = wall_spec.Angles[i];
+                movement_angles[wall_spec.Angles[i]] += previous_movement_interest;
+            }
+            else
+            {
+                movement_angles[wall_spec.Angles[i]] += !(previousMovementAngle < 90 ^ wall_spec.Angles[i] < 90) ? previous_movement_interest : 0;
             }
         }
 
-        // float max_angle = 45; //(transform.rotation.y * 180 / (float)Math.PI) - max_angle + 90;
 
-        Debug.Log($"Before rotation: {transform.eulerAngles.y}, ajust with {max_angle},     {agentSpeed}");
+        // GET BEST ANGLE FOR MOVEMENT AND ROTATION
+        float max_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+        rotation_angles[max_movement_angle] += rotation_in_movement_direction_interest;
+        float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
-        float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, transform.eulerAngles.y + max_angle + 90, Time.fixedDeltaTime * rotationSpeed);
+        // ROTATE AGENT
+        float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, transform.eulerAngles.y + max_rotation_angle + 90, Time.fixedDeltaTime * rotationSpeed);
         transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
-        // Debug.Log($"Move angle: {smoothRotation}, Rotation: {transform.rotation.y * 180 / Math.PI}");
 
-        double z_dir = Math.Sin((max_angle) * Math.PI / 180);
-        double x_dir = Math.Cos((max_angle) * Math.PI / 180);
-
-        var moveDir = transform.TransformDirection(new Vector3((float)x_dir * agentSpeed / 5, 0, (float)z_dir * agentSpeed / 5));
+        // MOVE AGENT
+        double z_delta = Math.Sin((max_movement_angle) * Math.PI / 180);
+        double x_delta = Math.Cos((max_movement_angle) * Math.PI / 180);
+        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * agentSpeed / 5, 0, (float)z_delta * agentSpeed / 5));
         m_CubeMovement.RunOnGround(moveDir);
-
-
-
-        // // // Gammel kode
-        // // Movement
-        // Vector3 direction = (targetPosition - transform.position).normalized;
-        // Vector3 rotationDirection = direction;
-
-        // // Detect ball and get updated target direction if ball is within a smaller radius
-        // if (currentNumberOfBalls < 4)
-        // {
-        //     float ballDetectionRadius = 10f - currentNumberOfBalls * 2;
-        //     (direction, rotationDirection) = DetectBall(direction, ballDetectionRadius);
-        // }
-
-        // // Detect enemy player and get updated rotation direction if enemy is within radius
-        // float enemyDetectionRadius = 10f;
-        // rotationDirection = DetectEnemyPlayerForRotation(rotationDirection, enemyDetectionRadius);
-
-        // // Calculate targetRotation based on the updated rotation direction
-        // float targetRotation = Mathf.Atan2(rotationDirection.x, rotationDirection.z) * Mathf.Rad2Deg;
-
-        // // HANDLE ROTATION
-        // float smoothRotation = Mathf.LerpAngle(transform.eulerAngles.y, targetRotation, Time.fixedDeltaTime * rotationSpeed);
-        // transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
-
-        // // HANDLE XZ MOVEMENT
-        // var moveDir = transform.TransformDirection(new Vector3(direction.x * agentSpeed, 0, direction.z * agentSpeed));
-        // m_CubeMovement.RunOnGround(moveDir);
     }
 
     void Update()
