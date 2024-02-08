@@ -1,26 +1,38 @@
 import math
 
 from GameVisualizer import PlayerData, PositionData, getLogData
+from DataAnalyser import DataAnalyzer
 
 
-date = "2024-01-30_15-46-27"
+MAPOCA_date = "2024-02-07_14-44-25"
+FSM_date = "2024-02-07_14-50-44"
+Imitation77M_date = "2024-02-07_14-57-05"
+Reinforcement87M_date = "2024-02-07_15-02-52"
 
 y_delta = 34
 margin = 0
 
-corners = [(8.9 - margin, -20 + y_delta + margin), (34.9 + margin, -20 + y_delta + margin),
+
+def define_corners(y_delta=34, margin=0):
+    return [(8.9 - margin, -20 + y_delta + margin), (34.9 + margin, -20 + y_delta + margin),
         (34.9 + margin, round(-73.9 + y_delta, 2) - margin), (8.9 - margin, round(-73.9 + y_delta, 2) - margin)]
 
-bushes = [
-    [(18.8, -64.5 + y_delta), (13.3, -64.5 + y_delta)],
-    [(32.0, -64.5 + y_delta), (26.5, -64.5 + y_delta)],
-    [(18.3, -54.6 + y_delta), (14.4, -58.5 + y_delta)],
-    [(29.8, -58.5 + y_delta), (25.9, -54.6 + y_delta)],
-    [(18.8, -42.8 + y_delta), (14.9, -38.9 + y_delta)],
-    [(29.3, -38.9 + y_delta), (25.4, -42.8 + y_delta)],
-    [(18.8, -31.9 + y_delta), (13.3, -31.9 + y_delta)],
-    [(32.0, -31.7 + y_delta), (26.5, -31.7 + y_delta)],
-]
+
+def define_bushes(y_delta=34):
+    bushes = [
+        [(18.8, -64.5 + y_delta), (17.7, -64.5 + y_delta), (16.6, -64.5 + y_delta), (15.5, -64.5 + y_delta), (14.4, -64.5 + y_delta), (13.3, -64.5 + y_delta)],
+        [(32.0, -64.5 + y_delta), (30.9, -64.5 + y_delta), (29.8, -64.5 + y_delta), (28.7, -64.5 + y_delta), (27.6, -64.5 + y_delta), (26.5, -64.5 + y_delta)],
+        [(18.3, -54.6 + y_delta), (17.5, -55.4 + y_delta), (16.7, -56.2 + y_delta), (16.0, -57.0 + y_delta), (15.2, -57.8 + y_delta), (14.4, -58.5 + y_delta)],
+        [(29.8, -58.5 + y_delta), (29.0, -57.8 + y_delta), (28.2, -57.0 + y_delta), (27.5, -56.2 + y_delta), (26.7, -55.4 + y_delta), (25.9, -54.6 + y_delta)],
+        [(18.8, -42.8 + y_delta), (18.0, -42.0 + y_delta), (17.2, -41.2 + y_delta), (16.5, -40.5 + y_delta), (15.7, -39.7 + y_delta), (14.9, -38.9 + y_delta)],
+        [(29.3, -38.9 + y_delta), (28.5, -39.7 + y_delta), (27.7, -40.5 + y_delta), (27.0, -41.2 + y_delta), (26.2, -42.0 + y_delta), (25.4, -42.8 + y_delta)],
+        [(18.8, -31.9 + y_delta), (17.7, -31.9 + y_delta), (16.6, -31.9 + y_delta), (15.5, -31.9 + y_delta), (14.4, -31.9 + y_delta), (13.3, -31.9 + y_delta)],
+        [(32.0, -31.7 + y_delta), (30.9, -31.7 + y_delta), (29.8, -31.7 + y_delta), (28.7, -31.7 + y_delta), (27.6, -31.7 + y_delta), (26.5, -31.7 + y_delta)],
+    ]
+    return bushes
+
+corners = define_corners()
+bushes = define_bushes()
 
 
 def define_zones(breadth_no=3, length_no=3):
@@ -83,11 +95,12 @@ def define_hide_zone(distance=3):
 
 class AgentBehaviorAnalyzer:
 
-    def __init__(self):
+    def __init__(self, date="2024-02-07_14-44-25"):
+        self.date = date
         self.player_data = PlayerData(getLogData("PlayerData", date))
         self.position_data = PositionData(getLogData("Position", date))
         self.results_data = getLogData("Results")
-        self.zones = define_zones()
+        self.zones = define_zones(1,2)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -172,11 +185,12 @@ class AgentBehaviorAnalyzer:
         return angle_list
     
 
-    def calculate_percentage_facing_opponent(self, agent="Blue"):
+    def calculate_percentage_facing_opponent(self, agent="Blue", margin_degrees=10):
         """
         Calculate the fraction of time spent facing the opponent.
+        margin_degrees is how many degrees agent can be rotated away from opponent while still being considered facing the opponent.
         """
-        facing_list = list(filter(lambda pos: (self.calculate_rotation_difference(pos.timestamp, agent) < 10), self.position_data.pos_list))
+        facing_list = list(filter(lambda pos: (self.calculate_rotation_difference(pos.timestamp, agent) < margin_degrees), self.position_data.pos_list))
         return len(facing_list)/len(self.position_data.pos_list)
     
 
@@ -190,8 +204,8 @@ class AgentBehaviorAnalyzer:
 
         for zone in self.zones.keys():
             min_max_dict = get_min_and_max_for_rectangle(self.zones[zone])
-            is_in_x = pos[0] > min_max_dict["min_x"] and pos[0] < min_max_dict["max_x"]
-            is_in_y = pos[1] > min_max_dict["min_y"] and pos[1] < min_max_dict["max_y"]
+            is_in_x = pos[0] >= min_max_dict["min_x"] and pos[0] <= min_max_dict["max_x"]
+            is_in_y = pos[1] >= min_max_dict["min_y"] and pos[1] <= min_max_dict["max_y"]
             if is_in_x and is_in_y:
                 return zone
         return None
@@ -211,26 +225,246 @@ class AgentBehaviorAnalyzer:
         for zone in zone_count.keys():
             zone_percentage[zone] = zone_count[zone]/len(self.position_data.pos_list)
         return zone_percentage
+    
 
+    def find_start_zone(self, agent="Blue"):
+        """
+        Return the zone where the agent is in the beginning of the game
+        """
+        timestamp = self.position_data.pos_list[0].timestamp
+        return self.find_agent_zone(timestamp, agent)
+    
 
-    def is_hiding(self, agent="Blue"):
+    def calculate_average_pickup_throw_time(self, agent="Blue"):
+        """
+        Calculate the how long it takes on average for the agent to throw the ball after pickup
+        """
+        pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.player_data.event_list))
+        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
+        time_list = []
+        for i in range(len(throw_list)):
+            time = throw_list[i].timestamp - pick_list[i].timestamp
+            time_list.append(time.total_seconds())
+        return sum(time_list)/len(time_list)
+    
+
+    def calculate_rotation_change_percentage(self, agent="Blue"):
+        """
+        Calculate the percentage of the movements that are a rotation change in the opposite direction
+        AI agents tend to have more jerky movements and thus a higher percentage
+        """
+        rot_change_count = 0
+        right_turn = True
+        if agent == "Blue" : prev_rot = self.position_data.pos_list[0].rotation_blue
+        else : prev_rot = self.position_data.pos_list[0].rotation_purple
+        for pos in self.position_data.pos_list[1:]:
+            if agent == "Blue" : rot = pos.rotation_blue
+            else : rot = pos.rotation_purple
+            diff = ((rot - prev_rot) + 180) % 360 - 180
+            prev_rot = rot
+            is_turning_right = abs(diff) != diff
+            if diff != 0 and (right_turn == is_turning_right):
+                rot_change_count += 1
+                right_turn = is_turning_right
+        return rot_change_count/len(self.position_data.pos_list)
+    
+
+    def is_close_to_bush(self, timestamp, agent="Blue", distance=3):
+        """
+        Return True if agent is within a given distance from a bush for a given timestamp
+        """
+        pos_entry = self.get_position_data(timestamp)
+        if agent == "Blue" : pos = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
+        else : pos = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
+        for bush in bushes:
+            for bush_part in bush:
+                if math.dist(pos, bush_part) < distance : return True
         return False
+    
+
+    def calculate_bush_closeness_percentage(self, agent="Blue", distance=3):
+        """
+        Calculate the percentage of time the agent spends within a given distance from a bush
+        """
+        close_list = list(filter(lambda pos: (self.is_close_to_bush(pos.timestamp, agent, distance)), self.position_data.pos_list))
+        return len(close_list)/len(self.position_data.pos_list)
+    
+
+    def print_all_data(self):
+        print("Average throw distance for Blue:", round(self.calculate_average_throw_distance("Blue"), 3))
+        print("Average throw distance for Purple:", round(self.calculate_average_throw_distance("Purple"), 3))
+        
+        print()
+
+        print("Average throw angle for Blue:", round(self.calculate_average_throw_angle("Blue"), 3))
+        print("Average throw angle for Purple:", round(self.calculate_average_throw_angle("Purple"), 3))
+        
+        # print(ba.calculate_angle_when_hit("Purple"))
+        # print(ba.calculate_angle_when_hit("Blue"))
+
+        print()
+        
+        print("Percentage of time Blue faces opponent:", round(self.calculate_percentage_facing_opponent("Blue")*100, 3), "%")
+        print("Percentage of time Purple faces opponent:", round(self.calculate_percentage_facing_opponent("Purple")*100, 3), "%")
+
+        print()
+        
+        print("Blue starts in zone:", self.find_start_zone("Blue"))
+        print("Percentage of time Blue spends in each zone:")
+        for key in self.calculate_zone_percentage("Blue").keys():
+            print(key, ":", round(self.calculate_zone_percentage("Blue")[key]*100, 3), "%")
+        print()
+        print("Purple starts in zone:", self.find_start_zone("Purple"))
+        print("Percentage of time Purple spends in each zone:")
+        for key in self.calculate_zone_percentage("Purple").keys():
+            print(key, ":", round(self.calculate_zone_percentage("Purple")[key]*100, 3), "%")
+
+        print()
+        
+        print("Average time from ball pickup to throw for Blue:", round(self.calculate_average_pickup_throw_time("Blue"), 3), "s")
+        print("Average time from ball pickup to throw for Purple:", round(self.calculate_average_pickup_throw_time("Purple"), 3), "s")
+
+        print()
+
+        print("Percentage of time Blue changes rotation direction:", round(self.calculate_rotation_change_percentage("Blue")*100, 3), "%")
+        print("Percentage of time Purple changes rotation direction:", round(self.calculate_rotation_change_percentage("Purple")*100, 3), "%")
+
+        print()
+
+        print("Percentage of time Blue is close to a bush:", round(self.calculate_bush_closeness_percentage("Blue", 3)*100, 3), "%")
+        print("Percentage of time Purple is close to a bush:", round(self.calculate_bush_closeness_percentage("Purple")*100, 3), "%")
+
+
+
+def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
+    spacing = 16
+    extra_spacing = 6
+    print(" ".ljust(spacing+extra_spacing), end="")
+    for header in headers:
+        print(header.ljust(spacing), end="")
+    print("\n")
+
+    print("No of pickups".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{a.count_event_occurences(agent + "PickedUpBall")}'.ljust(spacing), end="")
+    print()
+
+    print("No of throws".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{a.count_event_occurences(agent + "ThrewBall")}'.ljust(spacing), end="")
+    print()
+
+    print("No of hitting".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        if agent == "Blue" : opponent = "Purple"
+        else : opponent = "Blue"
+        print(f'{a.count_event_occurences("Hit" + opponent)}'.ljust(spacing), end="")
+    print()
+
+    print("No of being hit".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{a.count_event_occurences("Hit" + agent)}'.ljust(spacing), end="")
+    print()
+
+    print()
+
+    print("Precision".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{round(a.calculate_precision(agent)*100, 2)} %'.ljust(spacing), end="")
+    print()
+
+    print("Faces opponent".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_percentage_facing_opponent(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Rotation change".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print()
+
+    print("Avg ball hold".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{round(a.calculate_average_ball_hold(agent), 3)}'.ljust(spacing), end="")
+    print()
+
+    print("Avg throw distance".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)}'.ljust(spacing), end="")
+    print()
+
+    print("Avg throw angle".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_average_throw_angle(agent), 3)}'.ljust(spacing), end="")
+    print()
+
+    print("Pickup-throw time".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)} s'.ljust(spacing), end="")
+    print()
+
+    print()
+
+    print("Court (0,0)".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Court (1,0)".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Close to bush".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_bush_closeness_percentage(agent, 3)*100, 3)} %'.ljust(spacing), end="")
+    print()
 
     
-    
+
+
+def add_data_analyzer(date):
+    da = DataAnalyzer()
+    da.filename = "GameLog_Player_Data_" + date + ".txt"
+    if ".meta" not in da.filename:
+        da.read_data()
+        da.clean_data()
+        da.print_duration()
+        da.save_data()
+    return da
+
+
+def print_divider():
+    print()
+    print("==================================================================================")
+    print()
+
+
 if __name__ == "__main__":
-    ba = AgentBehaviorAnalyzer()
-    # print(ba.calculate_average_throw_distance("Blue"))
-    # print(ba.calculate_average_throw_distance("Purple"))
-    # print(ba.calculate_rotation_difference(ta.position_data.pos_list[0].timestamp, agent="Purple"))
-    # print(ba.calculate_average_throw_angle("Blue"))
-    # print(ba.calculate_average_throw_angle("Purple"))
-    # print(ba.calculate_angle_when_hit("Purple"))
-    # print(ba.calculate_angle_when_hit("Blue"))
-    # print("Blue", ba.calculate_percentage_facing_opponent("Blue")*100)
-    # print("Purple", ba.calculate_percentage_facing_opponent("Purple")*100)
+    print_divider()
+    mapoca = AgentBehaviorAnalyzer(date=MAPOCA_date)
+    il = AgentBehaviorAnalyzer(date=Imitation77M_date)
+    rl = AgentBehaviorAnalyzer(date=Reinforcement87M_date)
 
-    # print(define_zones())
-    print(ba.calculate_zone_percentage("Blue"))
-    print(ba.calculate_zone_percentage("Purple"))
+    corners = define_corners(y_delta=0)
+    bushes = define_bushes(y_delta=0)
+    fsm = AgentBehaviorAnalyzer(date=FSM_date)
+
+    da_mapoca = add_data_analyzer(MAPOCA_date)
+    da_il = add_data_analyzer(Imitation77M_date)
+    da_rl = add_data_analyzer(Reinforcement87M_date)
+    da_fsm = add_data_analyzer(FSM_date)
+
+    analyzers = [mapoca, il, rl, fsm]
+    da_analyzers = [da_mapoca, da_il, da_rl, da_fsm]
+    print_divider()
+
+    compare(analyzers, ["MAPOCA", "IL", "RL", "FSM"], "Purple", da_analyzers)
+    print_divider()
+
+    compare(analyzers, ["Blue 1", "Blue 2", "Blue 3", "Blue 4"], "Blue", da_analyzers)
+    print_divider()
+    
 

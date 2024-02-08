@@ -508,16 +508,18 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
 
 
 
-player_data = PlayerData(getLogData("PlayerData"))
-position_data = PositionData(getLogData("Position"))
-results_data = getLogData("Results")
+if __name__ == "__main__":
+
+    player_data = PlayerData(getLogData("PlayerData"))
+    position_data = PositionData(getLogData("Position"))
+    results_data = getLogData("Results")
 
 
-print(f"Number of games: {player_data.numGames()}")
+    print(f"Number of games: {player_data.numGames()}")
 
-if show_all_games:
-    for i in range(player_data.numGames()):
-        print(f"Game {i}")
-        # showFullRunWithSliderTime(position_data, player_data, i)
-else:
-    showFullRunWithSliderTime(position_data, player_data, game_num)
+    if show_all_games:
+        for i in range(player_data.numGames()):
+            print(f"Game {i}")
+            showFullRunWithSliderTime(position_data, player_data, i)
+    else:
+        showFullRunWithSliderTime(position_data, player_data, game_num)
