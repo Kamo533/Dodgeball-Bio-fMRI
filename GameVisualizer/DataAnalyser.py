@@ -96,7 +96,7 @@ class DataAnalyzer:
         # show the plot
         plt.show()
 
-    def elapsed_time(self, column="PlayerLives"):
+    def elapsed_time(self, column="BlueLives"):
         # Create a boolean mask where LivesLeft equals 3
         if column == "Corner":
             text = "condition happens"
@@ -170,6 +170,37 @@ class DataAnalyzer:
         return precision
     
 
+    def calculate_average_ball_hold(self, player):
+
+        def logic_op(row, boolean_mode, ball_no):
+            if boolean_mode == True:
+                return True if row[player + "BallsLeft"] == ball_no else False
+            return True if row[player + "BallsLeft"] != ball_no else False
+
+        ball_hold_dict = {}
+        for current_ball_number in range(5):
+            in_sequence = False
+            sequence_start = None
+            total_duration = pd.Timedelta(0).total_seconds()
+            for i, row in self.df.iterrows():
+                if logic_op(row, True, current_ball_number) and not in_sequence:
+                    # Start of new sequence
+                    in_sequence = True
+                    sequence_start = row['elapsed_time']
+                elif logic_op(row, False, current_ball_number) and in_sequence:
+                    # End of sequence
+                    in_sequence = False
+                    sequence_end = row['elapsed_time']
+                    sequence_duration = sequence_end - sequence_start
+                    total_duration += sequence_duration
+            ball_hold_dict[current_ball_number] = total_duration
+        
+        ball_sum = 0
+        for key in ball_hold_dict.keys():
+            ball_sum += key * ball_hold_dict[key]
+        return ball_sum/sum(ball_hold_dict.values())
+    
+
     def print_event_count(self, event='BlueThrewBall'):
         count = self.count_event_occurences(event)
         print(f'{event} occurred {count} times')
@@ -178,6 +209,11 @@ class DataAnalyzer:
     def print_precision(self, player='Blue'):
         precision = self.calculate_precision(player)
         print(f'{player} had a precision of {round(precision * 100, 2)} %')
+    
+
+    def print_ball_hold(self, player="Blue"):
+        ball_hold = self.calculate_average_ball_hold(player)
+        print(f'{player} held {round(ball_hold, 2)} balls on average')
 
 
 
@@ -204,14 +240,16 @@ if __name__ == "__main__":
                 # da.save_data()
 
 
-    da.print_data()
-    # da.print_corner()
+    # da.print_data()
+    da.print_corner()
 
-    # da.plot(columns=['BlueLives'])
-    # da.plot(columns=['PurpleLives'])
-    # da.plot(columns=['BlueBallsLeft'])
-    # da.plot(columns=['PurpleBallsLeft'])
-    # da.plot(columns=['Corner'])
+    print()
+
+    da.plot(columns=['BlueLives'])
+    da.plot(columns=['PurpleLives'])
+    da.plot(columns=['BlueBallsLeft'])
+    da.plot(columns=['PurpleBallsLeft'])
+    da.plot(columns=['Corner'])
 
     # Elapsed time prints (total duration a given field is a given condition)
     da.elapsed_time(column="BlueLives")
@@ -235,4 +273,10 @@ if __name__ == "__main__":
     # Precision
     da.print_precision(player="Blue")
     da.print_precision(player="Purple")
+
+    print()
+
+    # Ball hold
+    da.print_ball_hold(player="Blue")
+    da.print_ball_hold(player="Purple")
 
