@@ -99,7 +99,7 @@ class AgentBehaviorAnalyzer:
         self.date = date
         self.player_data = PlayerData(getLogData("PlayerData", date))
         self.position_data = PositionData(getLogData("Position", date))
-        self.results_data = getLogData("Results")
+        self.results_data = getLogData("Results", date)
         self.zones = define_zones(1,2)
 
 
@@ -290,6 +290,16 @@ class AgentBehaviorAnalyzer:
         return len(close_list)/len(self.position_data.pos_list)
     
 
+    def count_wins(self, agent="Blue"):
+        iterator = iter(self.results_data.splitlines())
+        count = 0
+        for result_line in iterator:
+            data = result_line.split(",")
+            if "Winner: " + agent in data[1]:
+                count += 1
+        return count
+    
+
     def print_all_data(self):
         print("Average throw distance for Blue:", round(self.calculate_average_throw_distance("Blue"), 3))
         print("Average throw distance for Purple:", round(self.calculate_average_throw_distance("Purple"), 3))
@@ -339,10 +349,36 @@ class AgentBehaviorAnalyzer:
 def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
     spacing = 16
     extra_spacing = 6
+    if agent == "Blue" : opponent = "Purple"
+    else : opponent = "Blue"
+    
     print(" ".ljust(spacing+extra_spacing), end="")
     for header in headers:
         print(header.ljust(spacing), end="")
     print("\n")
+
+    print("No of games".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{a.count_wins(agent) + a.count_wins(opponent)}'.ljust(spacing), end="")
+    print()
+
+    print("No of wins".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{a.count_wins(agent)}'.ljust(spacing), end="")
+    print()
+
+    print("No of losses".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{a.count_wins(opponent)}'.ljust(spacing), end="")
+    print()
+
+    print("Win ratio".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        ratio = a.count_wins(agent) / (a.count_wins(agent) + a.count_wins(opponent))
+        print(f'{round(ratio*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print()
 
     print("No of pickups".ljust(spacing+extra_spacing), end="")
     for a in da_analyzers:
@@ -356,8 +392,6 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
 
     print("No of hitting".ljust(spacing+extra_spacing), end="")
     for a in da_analyzers:
-        if agent == "Blue" : opponent = "Purple"
-        else : opponent = "Blue"
         print(f'{a.count_event_occurences("Hit" + opponent)}'.ljust(spacing), end="")
     print()
 
@@ -366,6 +400,12 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
         print(f'{a.count_event_occurences("Hit" + agent)}'.ljust(spacing), end="")
     print()
 
+    print()
+
+    print("Hit ratio".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        ratio = a.count_event_occurences("Hit" + opponent)/(a.count_event_occurences("Hit" + agent) + a.count_event_occurences("Hit" + opponent))
+        print(f'{round(ratio*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Precision".ljust(spacing+extra_spacing), end="")
@@ -407,20 +447,20 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
 
     print()
 
-    print("Court (0,0)".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
-    print()
-
-    print("Court (1,0)".ljust(spacing+extra_spacing), end="")
+    print("On blue side".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    print("Close to bush".ljust(spacing+extra_spacing), end="")
+    print("On purple side".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    """ print("Close to bush".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_bush_closeness_percentage(agent, 3)*100, 3)} %'.ljust(spacing), end="")
-    print()
+    print() """
 
     
 
