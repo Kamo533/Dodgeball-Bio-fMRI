@@ -958,15 +958,15 @@ public class DodgeBallAgent : Agent
                 break;
             case 1:
                 max_length = 50;
-                ball_interest = (4 - currentNumberOfBalls) / 3;
+                ball_interest = (4 - currentNumberOfBalls) / 4;
                 bush_interest = (float)0.7 * currentNumberOfBalls;
-                open_space_interest = x => -(x - (float)0.15) * (x - (float)0.15) * (float)10; //(float)0.5;
+                open_space_interest = x => -(x - (float)0.15) * (x - (float)0.15) * (float)10;
                 view_open_space_interest = (float)0.2;
-                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01; //currentNumberOfBalls / 2;
-                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5; // (4 - currentNumberOfBalls) / 3 * 0;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
                 rotation_in_movement_direction_interest = (float)0.7;
                 previous_movement_interest = (float)0.5;
-                n = 10;
+                n = 20;
                 break;
             default:
                 max_length = 50;
