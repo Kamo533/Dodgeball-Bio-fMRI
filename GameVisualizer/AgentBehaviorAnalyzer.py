@@ -10,6 +10,7 @@ Imitation77M_date = "2024-02-07_14-57-05"
 Reinforcement87M_date = "2024-02-07_15-02-52"
 Reinforcement43M_date = "2024-02-08_15-04-58"
 RewardShaping97M_date = "2024-02-08_14-48-22"
+FSMNew_date = "2024-02-09_10-05-20"
 
 y_delta = 34
 margin = 0
@@ -243,9 +244,26 @@ class AgentBehaviorAnalyzer:
         """
         pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.player_data.event_list))
         throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
+        game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.player_data.event_list))
         time_list = []
+        j = 0
         for i in range(len(throw_list)):
-            time = throw_list[i].timestamp - pick_list[i].timestamp
+            throw_time = throw_list[i].timestamp
+            # Only want the time if pickup and throw occurred in the same game
+            # Loop through pickups until we find the one in the same game
+            for k in range(i+j, len(pick_list)):
+                same_game = True
+                pick_time = pick_list[k].timestamp
+                # Loop through all timestamps where game ended
+                for end in game_end_list:
+                    end_time = end.timestamp
+                    if pick_time < end_time and throw_time > end_time:
+                        j += 1
+                        same_game = False
+                        break
+                if same_game:
+                    break
+            time = throw_time - pick_time              
             time_list.append(time.total_seconds())
         return sum(time_list)/len(time_list)
     
@@ -537,18 +555,22 @@ if __name__ == "__main__":
     corners = define_corners(y_delta=0)
     bushes = define_bushes(y_delta=0)
     fsm = AgentBehaviorAnalyzer(date=FSM_date)
+    fsm_new = AgentBehaviorAnalyzer(date=FSMNew_date)
     da_fsm = add_data_analyzer(FSM_date)
+    da_fsm_new = add_data_analyzer(FSMNew_date)
 
-    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm]
-    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm]
-    labels = ["MAPOCA", "IL", "RL-43M", "RL-87M", "RS", "FSM"]
-    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6"]
+    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm, fsm_new]
+    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm, da_fsm_new]
+    labels = ["MAPOCA", "IL", "RL-43M", "RL-87M", "RS", "FSM", "FSM New"]
+    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6", "Blue 7"]
     print_divider()
 
-    print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
+    # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
 
-    # compare(analyzers, da_analyzers, labels, "Purple")
-    # print_divider()
+    # print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
+
+    compare(analyzers, da_analyzers, labels, "Purple")
+    print_divider()
 
     # compare(analyzers, da_analyzers, blue_labels, "Blue")
     # print_divider()
