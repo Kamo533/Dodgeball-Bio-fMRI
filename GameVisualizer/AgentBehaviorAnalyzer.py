@@ -8,6 +8,8 @@ MAPOCA_date = "2024-02-07_14-44-25"
 FSM_date = "2024-02-07_14-50-44"
 Imitation77M_date = "2024-02-07_14-57-05"
 Reinforcement87M_date = "2024-02-07_15-02-52"
+Reinforcement43M_date = "2024-02-08_15-04-58"
+RewardShaping97M_date = "2024-02-08_14-48-22"
 
 y_delta = 34
 margin = 0
@@ -346,15 +348,15 @@ class AgentBehaviorAnalyzer:
 
 
 
-def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
+def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     spacing = 16
     extra_spacing = 6
     if agent == "Blue" : opponent = "Purple"
     else : opponent = "Blue"
     
     print(" ".ljust(spacing+extra_spacing), end="")
-    for header in headers:
-        print(header.ljust(spacing), end="")
+    for label in labels:
+        print(label.ljust(spacing), end="")
     print("\n")
 
     print("No of games".ljust(spacing+extra_spacing), end="")
@@ -432,7 +434,7 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
 
     print("Avg throw distance".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
-        print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)}'.ljust(spacing), end="")
+        print(f'{round(a.calculate_average_throw_distance(agent), 3)}'.ljust(spacing), end="")
     print()
 
     print("Avg throw angle".ljust(spacing+extra_spacing), end="")
@@ -440,7 +442,12 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
         print(f'{round(a.calculate_average_throw_angle(agent), 3)}'.ljust(spacing), end="")
     print()
 
-    print("Pickup-throw time".ljust(spacing+extra_spacing), end="")
+    print("Avg pickup time".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{round(a.calculate_time_between_pickup(agent), 3)} s'.ljust(spacing), end="")
+    print()
+
+    print("Avg throw time".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)} s'.ljust(spacing), end="")
     print()
@@ -462,6 +469,36 @@ def compare(analyzers=[], headers=[], agent="Purple", da_analyzers=[]):
         print(f'{round(a.calculate_bush_closeness_percentage(agent, 3)*100, 3)} %'.ljust(spacing), end="")
     print() """
 
+
+def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[], agent="Blue"):
+    score_list = []
+    for i in range(len(analyzers)):
+        score = 0
+        score += abs(analyzer.calculate_percentage_facing_opponent(agent) - analyzers[i].calculate_percentage_facing_opponent(agent))
+        score += abs(analyzer.calculate_rotation_change_percentage(agent) - analyzers[i].calculate_rotation_change_percentage(agent))
+        score += abs(analyzer.calculate_average_throw_distance(agent) - analyzers[i].calculate_average_throw_distance(agent)) / 10
+        score += abs(analyzer.calculate_average_throw_angle(agent) - analyzers[i].calculate_average_throw_angle(agent)) / 10
+        score += abs(analyzer.calculate_average_pickup_throw_time(agent) - analyzers[i].calculate_average_pickup_throw_time(agent)) / 10
+        score += abs(da_analyzer.calculate_time_between_pickup(agent) - da_analyzers[i].calculate_time_between_pickup(agent)) / 10
+        score += abs(da_analyzer.calculate_precision(agent) - da_analyzers[i].calculate_precision(agent))
+        score_list.append(score)
+    return score_list
+
+
+def print_playstyle_table(analyzers=[], da_analyzers=[], labels=[], agent="Blue"):
+    spacing = 12
+    extra_spacing = 4
+    print(" ".ljust(spacing+extra_spacing), end="")
+    for label in labels:
+        print(label.ljust(spacing), end="")
+    print("\n")
+    for i in range(len(analyzers)):
+        score_list = find_closest_playstyle(analyzers[i], da_analyzers[i], analyzers, da_analyzers, agent)
+        print(labels[i].ljust(spacing+extra_spacing), end="")
+        for score in score_list:
+            print(f'{round(score, 3)}'.ljust(spacing), end="")
+        print()
+
     
 
 
@@ -478,33 +515,42 @@ def add_data_analyzer(date):
 
 def print_divider():
     print()
-    print("==================================================================================")
-    print()
+    for i in range(120):
+        print("=", end="")
+    print("\n")
 
 
 if __name__ == "__main__":
     print_divider()
     mapoca = AgentBehaviorAnalyzer(date=MAPOCA_date)
     il = AgentBehaviorAnalyzer(date=Imitation77M_date)
-    rl = AgentBehaviorAnalyzer(date=Reinforcement87M_date)
+    rl_43 = AgentBehaviorAnalyzer(date=Reinforcement43M_date)
+    rl_87 = AgentBehaviorAnalyzer(date=Reinforcement87M_date)
+    rs = AgentBehaviorAnalyzer(date=RewardShaping97M_date)
+
+    da_mapoca = add_data_analyzer(MAPOCA_date)
+    da_il = add_data_analyzer(Imitation77M_date)
+    da_rl_43 = add_data_analyzer(Reinforcement43M_date)
+    da_rl_87 = add_data_analyzer(Reinforcement87M_date)
+    da_rs = add_data_analyzer(RewardShaping97M_date)
 
     corners = define_corners(y_delta=0)
     bushes = define_bushes(y_delta=0)
     fsm = AgentBehaviorAnalyzer(date=FSM_date)
-
-    da_mapoca = add_data_analyzer(MAPOCA_date)
-    da_il = add_data_analyzer(Imitation77M_date)
-    da_rl = add_data_analyzer(Reinforcement87M_date)
     da_fsm = add_data_analyzer(FSM_date)
 
-    analyzers = [mapoca, il, rl, fsm]
-    da_analyzers = [da_mapoca, da_il, da_rl, da_fsm]
+    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm]
+    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm]
+    labels = ["MAPOCA", "IL", "RL-43M", "RL-87M", "RS", "FSM"]
+    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6"]
     print_divider()
 
-    compare(analyzers, ["MAPOCA", "IL", "RL", "FSM"], "Purple", da_analyzers)
-    print_divider()
+    print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
 
-    compare(analyzers, ["Blue 1", "Blue 2", "Blue 3", "Blue 4"], "Blue", da_analyzers)
-    print_divider()
+    # compare(analyzers, da_analyzers, labels, "Purple")
+    # print_divider()
+
+    # compare(analyzers, da_analyzers, blue_labels, "Blue")
+    # print_divider()
     
 
