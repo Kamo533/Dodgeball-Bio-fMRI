@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4494692, g: 0.49953902, b: 0.5756877, a: 1}
+  m_IndirectSpecularColor: {r: 0.44946867, g: 0.4995383, b: 0.57568705, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3891,6 +3891,12 @@ PrefabInstance:
       propertyPath: dashCoolDownTimer
       value: 8.331252
       objectReference: {fileID: 0}
+    - target: {fileID: 2725496699599259471, guid: 5cc1d375350254c0585ef6e96a4ed1e5,
+        type: 3}
+      propertyPath: m_Model
+      value: 
+      objectReference: {fileID: 5022602860645237092, guid: 272cedb31f0274d58a4ee22f294ca325,
+        type: 3}
     - target: {fileID: 2818958117034701299, guid: 5cc1d375350254c0585ef6e96a4ed1e5,
         type: 3}
       propertyPath: m_Material
@@ -7461,7 +7467,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 0
-    m_SensorSize: {x: 3.114224, y: 1}
+    m_SensorSize: {x: 1.7823275, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -7477,7 +7483,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367967954}
-  m_LocalRotation: {x: 2.0848121e-17, y: 0.9962975, z: -0.085972905, w: 4.408007e-16}
+  m_LocalRotation: {x: -5.0387695e-32, y: 0.9962975, z: -0.08597289, w: 7.0126946e-31}
   m_LocalPosition: {x: 16, y: 3.7600002, z: 13.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -7974,7 +7980,9 @@ MonoBehaviour:
   thrower: 0
   fileNameResults: 
   fileNamePlayerData: 
+  fileNamePosition: 
   winstr: 
+  logsFolderName: 
 --- !u!1 &1457463690
 GameObject:
   m_ObjectHideFlags: 0
@@ -11697,7 +11705,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8697938321410268827}
-  m_LocalRotation: {x: 2.0848121e-17, y: 0.9962975, z: -0.085972905, w: 4.408007e-16}
+  m_LocalRotation: {x: -5.0387695e-32, y: 0.9962975, z: -0.08597289, w: 7.0126946e-31}
   m_LocalPosition: {x: 16, y: 3.7600002, z: 13.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []

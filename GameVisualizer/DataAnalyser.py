@@ -201,6 +201,10 @@ class DataAnalyzer:
         return ball_sum/sum(ball_hold_dict.values())
     
 
+    def calculate_time_between_pickup(self, player):
+        return self.df.elapsed_time.max() / self.df['EventType'].value_counts()[player + "PickedUpBall"]
+
+
     def print_event_count(self, event='BlueThrewBall'):
         count = self.count_event_occurences(event)
         print(f'{event} occurred {count} times')
@@ -245,11 +249,11 @@ if __name__ == "__main__":
 
     print()
 
-    da.plot(columns=['BlueLives'])
+    """ da.plot(columns=['BlueLives'])
     da.plot(columns=['PurpleLives'])
     da.plot(columns=['BlueBallsLeft'])
     da.plot(columns=['PurpleBallsLeft'])
-    da.plot(columns=['Corner'])
+    da.plot(columns=['Corner']) """
 
     # Elapsed time prints (total duration a given field is a given condition)
     da.elapsed_time(column="BlueLives")
@@ -279,4 +283,9 @@ if __name__ == "__main__":
     # Ball hold
     da.print_ball_hold(player="Blue")
     da.print_ball_hold(player="Purple")
+
+    print()
+
+    print(da.calculate_time_between_pickup(player="Blue"))
+    print(da.calculate_time_between_pickup(player="Purple"))
 
