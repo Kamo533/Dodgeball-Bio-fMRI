@@ -931,9 +931,10 @@ public class DodgeBallAgent : Agent
         // DIV VARIABLES
         float max_length = 50;
         float ball_interest = (4 - currentNumberOfBalls) / 2;
-        float open_space_interest = 1;
+        float bush_interest = (float)0.3 * currentNumberOfBalls;
+        float open_space_interest = (float)1;
         float agent_interest = currentNumberOfBalls / 2;
-        float agent_fear = (4 - currentNumberOfBalls) / 3 * 0;
+        float agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1; // (4 - currentNumberOfBalls) / 3 * 0;
         float rotation_in_movement_direction_interest = (float)0.1;
         float previous_movement_interest = (float)0.05;
 
@@ -1002,7 +1003,9 @@ public class DodgeBallAgent : Agent
             movement_angles[ball_spec.Angles[i]] += ball_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - ball_obs.RayOutputs[i].HitFraction) / max_length * ball_interest : 0; // If HitTagIndex == 1 then the ball is available to be picked up
 
             // If observe wall/bush
-            movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
+            // movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
+            movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest;
+            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? -(max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : 0;
 
             // Prefer continue in same direction
             if (Math.Abs(previousMovementAngle - 90) < 0.0001 && Math.Abs(previousMovementAngle - wall_spec.Angles[i]) < 0.0001)
@@ -1017,8 +1020,36 @@ public class DodgeBallAgent : Agent
 
 
         // GET BEST ANGLE FOR MOVEMENT AND ROTATION
-        float max_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
-        rotation_angles[max_movement_angle] += rotation_in_movement_direction_interest;
+        float new_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+        // rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
+        // float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+
+        IOrderedEnumerable<KeyValuePair<float, float>> sorted_movement = movement_angles.OrderByDescending(x => x.Value);
+        Debug.Log($"Five highest values: {sorted_movement.ElementAt(0).Value}, {sorted_movement.ElementAt(1).Value}, {sorted_movement.ElementAt(2).Value}, {sorted_movement.ElementAt(3).Value}, {sorted_movement.ElementAt(4).Value}");
+        // Get weighted random choice from the top n best
+        // NEW MOVMENT DIRECTION
+        int n = 4;
+        float top_movment_sum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            top_movment_sum += sorted_movement.ElementAt(i).Value;
+        }
+        float random_movment_sum_value = Random.Range((float)0, top_movment_sum);
+        float temp_sum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            temp_sum += sorted_movement.ElementAt(i).Value;
+            if (random_movment_sum_value <= temp_sum)
+            {
+                new_movement_angle = sorted_movement.ElementAt(i).Key;
+                break;
+            }
+        }
+
+        Debug.Log($"Random float: {random_movment_sum_value}, of highest {top_movment_sum}");
+
+
+        rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
         float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
         // ROTATE AGENT
@@ -1026,9 +1057,9 @@ public class DodgeBallAgent : Agent
         transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
 
         // MOVE AGENT
-        double z_delta = Math.Sin((max_movement_angle) * Math.PI / 180);
-        double x_delta = Math.Cos((max_movement_angle) * Math.PI / 180);
-        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * agentSpeed / 5, 0, (float)z_delta * agentSpeed / 5));
+        double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
+        double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
+        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * agentSpeed, 0, (float)z_delta * agentSpeed));
         m_CubeMovement.RunOnGround(moveDir);
     }
 
