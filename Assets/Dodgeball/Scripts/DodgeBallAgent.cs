@@ -119,7 +119,7 @@ public class DodgeBallAgent : Agent
 
     // variables for the rule based agent (FSM)
     private float previousMovementAngle;
-    private int fsm_version;
+    public int fsm_version;
 
     [HideInInspector]
     //because heuristic only runs every 5 fixed update steps, the input for a human feels really bad
@@ -176,7 +176,7 @@ public class DodgeBallAgent : Agent
                 WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
 
                 previousMovementAngle = 90; // 90 as in straight forward
-                fsm_version = 1;
+                fsm_version = 0;
 
                 // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
                 // //Debug.Log(WallRaycastSensor.GetObservationShape());
