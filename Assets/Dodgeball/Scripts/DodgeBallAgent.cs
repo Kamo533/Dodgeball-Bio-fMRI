@@ -176,7 +176,7 @@ public class DodgeBallAgent : Agent
                 WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
 
                 previousMovementAngle = 90; // 90 as in straight forward
-                fsm_version = 0;
+                // fsm_version = 0;
 
                 // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
                 // //Debug.Log(WallRaycastSensor.GetObservationShape());
@@ -968,6 +968,18 @@ public class DodgeBallAgent : Agent
                 previous_movement_interest = (float)0.5;
                 n = 20;
                 break;
+            case 2: // Random.Range((float)0, top_movment_sum)
+                max_length = 50;
+                ball_interest = Random.Range((float)0, (4 - currentNumberOfBalls) / 8);
+                bush_interest = (float)1.5 + (float)0.4 * currentNumberOfBalls;
+                open_space_interest = x => x < (float)0.05 ? -(float)0.3 : 0;
+                view_open_space_interest = (float)0.01;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 200 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? (float)0.3 : (float)0.8;
+                rotation_in_movement_direction_interest = (float)0.4;
+                previous_movement_interest = (float)0.9;
+                n = 20;
+                break;
             default:
                 max_length = 50;
                 ball_interest = (4 - currentNumberOfBalls) / 2;
@@ -1090,8 +1102,6 @@ public class DodgeBallAgent : Agent
             }
         }
 
-        Debug.Log($"Random float: {random_movment_sum_value}, of highest {top_movment_sum}");
-
 
         rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
         float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
@@ -1103,7 +1113,8 @@ public class DodgeBallAgent : Agent
         // MOVE AGENT
         double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
         double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
-        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * agentSpeed, 0, (float)z_delta * agentSpeed));
+        float eagerness = movement_angles[new_movement_angle] / 5 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
+        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
 
