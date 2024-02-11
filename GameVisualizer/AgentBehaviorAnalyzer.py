@@ -11,6 +11,8 @@ Reinforcement87M_date = "2024-02-07_15-02-52"
 Reinforcement43M_date = "2024-02-08_15-04-58"
 RewardShaping97M_date = "2024-02-08_14-48-22"
 FSMNew_date = "2024-02-09_10-05-20"
+FSMNewV2_date = "2024-02-09_14-02-04"
+FSMNewV3_date = "2024-02-11_17-27-12"
 
 y_delta = 34
 margin = 0
@@ -367,7 +369,7 @@ class AgentBehaviorAnalyzer:
 
 
 def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
-    spacing = 16
+    spacing = 14
     extra_spacing = 6
     if agent == "Blue" : opponent = "Purple"
     else : opponent = "Blue"
@@ -556,21 +558,25 @@ if __name__ == "__main__":
     bushes = define_bushes(y_delta=0)
     fsm = AgentBehaviorAnalyzer(date=FSM_date)
     fsm_new = AgentBehaviorAnalyzer(date=FSMNew_date)
+    fsm_new_v2 = AgentBehaviorAnalyzer(date=FSMNewV2_date)
+    fsm_new_v3 = AgentBehaviorAnalyzer(date=FSMNewV3_date)
     da_fsm = add_data_analyzer(FSM_date)
     da_fsm_new = add_data_analyzer(FSMNew_date)
+    da_fsm_new_v2 = add_data_analyzer(FSMNewV2_date)
+    da_fsm_new_v3 = add_data_analyzer(FSMNewV3_date)
 
-    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm, fsm_new]
-    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm, da_fsm_new]
-    labels = ["MAPOCA", "IL", "RL-43M", "RL-87M", "RS", "FSM", "FSM New"]
-    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6", "Blue 7"]
+    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm_new_v3]
+    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm_new_v3]
+    labels = ["MA-POCA", "IL", "RL-43M", "RL-87M", "RS", "FSM-3"]
+    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6", "Blue 7", "Blue 8"]
     print_divider()
 
     # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
 
-    # print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
-
     compare(analyzers, da_analyzers, labels, "Purple")
     print_divider()
+
+    print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
 
     # compare(analyzers, da_analyzers, blue_labels, "Blue")
     # print_divider()

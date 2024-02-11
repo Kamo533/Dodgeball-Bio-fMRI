@@ -119,6 +119,7 @@ public class DodgeBallAgent : Agent
 
     // variables for the rule based agent (FSM)
     private float previousMovementAngle;
+    public int fsm_version;
 
     [HideInInspector]
     //because heuristic only runs every 5 fixed update steps, the input for a human feels really bad
@@ -175,6 +176,7 @@ public class DodgeBallAgent : Agent
                 WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
 
                 previousMovementAngle = 90; // 90 as in straight forward
+                // fsm_version = 0;
 
                 // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
                 // //Debug.Log(WallRaycastSensor.GetObservationShape());
@@ -496,10 +498,6 @@ public class DodgeBallAgent : Agent
                 if (m_BehaviorParameters.TeamId == 0)
                 {
                     m_gameLogger.LogPlayerData(8); //Log player dash
-                }
-                else if (m_BehaviorParameters.TeamId == 1)
-                {
-                    m_gameLogger.LogPlayerData(12); //Log enemy/purple dash
                 }
             }
         }
@@ -933,13 +931,68 @@ public class DodgeBallAgent : Agent
 
 
         // DIV VARIABLES
-        float max_length = 50;
-        float ball_interest = (4 - currentNumberOfBalls) / 2;
-        float open_space_interest = 1;
-        float agent_interest = currentNumberOfBalls / 2;
-        float agent_fear = (4 - currentNumberOfBalls) / 3 * 0;
-        float rotation_in_movement_direction_interest = (float)0.1;
-        float previous_movement_interest = (float)0.05;
+        float max_length;
+        float ball_interest;
+        float bush_interest;
+        //float open_space_interest;
+        Func<float, float> open_space_interest;
+        float view_open_space_interest;
+        float agent_interest;
+        float agent_fear;
+        float rotation_in_movement_direction_interest;
+        float previous_movement_interest;
+        int n = 4;
+
+        switch (fsm_version)
+        {
+            case 0:
+                max_length = 50;
+                ball_interest = (4 - currentNumberOfBalls) / 2;
+                bush_interest = (float)0.3 * currentNumberOfBalls;
+                open_space_interest = x => (float)1;
+                view_open_space_interest = (float)0.5;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01; //currentNumberOfBalls / 2;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1; // (4 - currentNumberOfBalls) / 3 * 0;
+                rotation_in_movement_direction_interest = (float)0.5;
+                previous_movement_interest = (float)0.05;
+                break;
+            case 1:
+                max_length = 50;
+                ball_interest = (4 - currentNumberOfBalls) / 4;
+                bush_interest = (float)0.7 * currentNumberOfBalls;
+                open_space_interest = x => -(x - (float)0.15) * (x - (float)0.15) * (float)10;
+                view_open_space_interest = (float)0.2;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
+                rotation_in_movement_direction_interest = (float)0.7;
+                previous_movement_interest = (float)0.5;
+                n = 20;
+                break;
+            case 2: // Random.Range((float)0, top_movment_sum)
+                max_length = 50;
+                ball_interest = Random.Range((float)0, (4 - currentNumberOfBalls) / 8);
+                bush_interest = (float)1.5 + (float)0.4 * currentNumberOfBalls;
+                open_space_interest = x => x < (float)0.05 ? -(float)0.3 : 0;
+                view_open_space_interest = (float)0.01;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 200 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? (float)0.3 : (float)0.8;
+                rotation_in_movement_direction_interest = (float)0.4;
+                previous_movement_interest = (float)0.9;
+                n = 20;
+                break;
+            default:
+                max_length = 50;
+                ball_interest = (4 - currentNumberOfBalls) / 2;
+                bush_interest = (float)0.3 * currentNumberOfBalls;
+                open_space_interest = x => (float)1;
+                view_open_space_interest = (float)0.5;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1;
+                rotation_in_movement_direction_interest = (float)0.5;
+                previous_movement_interest = (float)0.05;
+                break;
+        }
+
 
 
         // Initialize directories with angles from wall_spec and back_spec
@@ -1006,7 +1059,10 @@ public class DodgeBallAgent : Agent
             movement_angles[ball_spec.Angles[i]] += ball_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - ball_obs.RayOutputs[i].HitFraction) / max_length * ball_interest : 0; // If HitTagIndex == 1 then the ball is available to be picked up
 
             // If observe wall/bush
-            movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
+            // movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
+            movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest(wall_obs.RayOutputs[i].HitFraction);
+            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? -(max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : 0;
+            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * view_open_space_interest;
 
             // Prefer continue in same direction
             if (Math.Abs(previousMovementAngle - 90) < 0.0001 && Math.Abs(previousMovementAngle - wall_spec.Angles[i]) < 0.0001)
@@ -1021,8 +1077,33 @@ public class DodgeBallAgent : Agent
 
 
         // GET BEST ANGLE FOR MOVEMENT AND ROTATION
-        float max_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
-        rotation_angles[max_movement_angle] += rotation_in_movement_direction_interest;
+        float new_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+        // rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
+        // float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+
+        IOrderedEnumerable<KeyValuePair<float, float>> sorted_movement = movement_angles.OrderByDescending(x => x.Value);
+        Debug.Log($"Five highest values: {sorted_movement.ElementAt(0).Value}, {sorted_movement.ElementAt(1).Value}, {sorted_movement.ElementAt(2).Value}, {sorted_movement.ElementAt(3).Value}, {sorted_movement.ElementAt(4).Value}");
+        // Get weighted random choice from the top n best
+        // NEW MOVMENT DIRECTION
+        float top_movment_sum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            top_movment_sum += sorted_movement.ElementAt(i).Value;
+        }
+        float random_movment_sum_value = Random.Range((float)0, top_movment_sum);
+        float temp_sum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            temp_sum += sorted_movement.ElementAt(i).Value;
+            if (random_movment_sum_value <= temp_sum)
+            {
+                new_movement_angle = sorted_movement.ElementAt(i).Key;
+                break;
+            }
+        }
+
+
+        rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
         float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
         // ROTATE AGENT
@@ -1030,9 +1111,10 @@ public class DodgeBallAgent : Agent
         transform.rotation = Quaternion.Euler(0, smoothRotation, 0);
 
         // MOVE AGENT
-        double z_delta = Math.Sin((max_movement_angle) * Math.PI / 180);
-        double x_delta = Math.Cos((max_movement_angle) * Math.PI / 180);
-        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * agentSpeed / 5, 0, (float)z_delta * agentSpeed / 5));
+        double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
+        double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
+        float eagerness = movement_angles[new_movement_angle] / 5 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
+        var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
 
