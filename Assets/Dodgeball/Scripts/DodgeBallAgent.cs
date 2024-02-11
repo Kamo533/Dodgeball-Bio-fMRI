@@ -964,7 +964,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.2;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
-                rotation_in_movement_direction_interest = (float)0.7;
+                rotation_in_movement_direction_interest = (float)0.4;
                 previous_movement_interest = (float)0.5;
                 n = 20;
                 break;
@@ -1113,7 +1113,7 @@ public class DodgeBallAgent : Agent
         // MOVE AGENT
         double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
         double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
-        float eagerness = movement_angles[new_movement_angle] / 5 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
+        float eagerness = movement_angles[new_movement_angle] / 4 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
         var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
