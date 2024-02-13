@@ -30,7 +30,7 @@ public class GameLogger : MonoBehaviour
         fileNamePlayerData = "GameLog_Player_Data_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
         fileNamePosition = "GameLog_Position_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
 
-        logsFolderName = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Dodgeball/Logs"); //"Assets/Dodgeball/Logs");
+        logsFolderName = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Dodgeball/Logs/Pilot"); //"Assets/Dodgeball/Logs");
 
 
         string folderPath = Path.Combine(logsFolderName, "Position");
