@@ -625,9 +625,14 @@ if __name__ == "__main__":
         "FSM_2": "2024-02-12_15-19-11",
     }
 
+    dates_pre_fmri = {
+        "FSM": "2024-02-13_15-57-30",
+        "RL": "2024-02-13_16-02-46"
+    }
 
+    compare_multiple_agents(dates_pre_fmri, "Purple")
     
-
+""" 
     print("USER 1")
     compare_multiple_agents(dates_user1, "Purple")
     print_divider()
@@ -639,7 +644,7 @@ if __name__ == "__main__":
     print_divider()
     print("USER 4")
     compare_multiple_agents(dates_user4, "Purple")
-    print_divider()
+    print_divider() """
 
 
 

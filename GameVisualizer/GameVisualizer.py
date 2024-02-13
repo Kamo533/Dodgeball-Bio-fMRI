@@ -21,7 +21,7 @@ def getLogData(name, date=date) -> str:
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs"
+    log_path = "Assets/Dodgeball/Logs/Pilot"
 
     part_path = ""
     if name == "PlayerData":

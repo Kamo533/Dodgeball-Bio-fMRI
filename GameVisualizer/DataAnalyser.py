@@ -10,7 +10,7 @@ class DataAnalyzer:
         self.df = None
         args = sys.argv[1:]
         # self.folder_path = "C:\\Users\\Kamo\\Desktop\\testBuild\\Test\\Dodgeball\\Logs\\PlayerData\\" # args[0] # Change to folder path
-        self.folder_path = "Assets/Dodgeball/Logs/PlayerData/"
+        self.folder_path = "Assets/Dodgeball/Logs/Pilot/PlayerData/"
         self.filename = ""
 
     def read_data(self):
