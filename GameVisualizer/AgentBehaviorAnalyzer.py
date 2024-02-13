@@ -611,14 +611,39 @@ if __name__ == "__main__":
         "FSM_2": "2024-02-11_22-03-24",
     }
 
-    """ print("USER 1")
+    dates_user3 = {
+        "RL_1": "2024-02-11_21-53-42",
+        "RL_2": "2024-02-12_13-36-25",
+        "FSM_1": "2024-02-12_13-43-25",
+        "FSM_2": "2024-02-12_13-50-32",
+    }
+
+    dates_user4 = {
+        "RL_1": "2024-02-12_15-27-58",
+        "RL_2": "2024-02-12_15-23-53",
+        "FSM_1": "2024-02-12_15-32-41",
+        "FSM_2": "2024-02-12_15-19-11",
+    }
+
+
+    
+
+    print("USER 1")
     compare_multiple_agents(dates_user1, "Purple")
     print_divider()
     print("USER 2")
     compare_multiple_agents(dates_user2, "Purple")
-    print_divider() """
+    print_divider()
+    print("USER 3")
+    compare_multiple_agents(dates_user3, "Purple")
+    print_divider()
+    print("USER 4")
+    compare_multiple_agents(dates_user4, "Purple")
+    print_divider()
 
-    print_playstyle_table(dates_pre_study, agent="Purple")
+
+
+    # print_playstyle_table(dates_pre_study, agent="Purple")
 
     # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
     
