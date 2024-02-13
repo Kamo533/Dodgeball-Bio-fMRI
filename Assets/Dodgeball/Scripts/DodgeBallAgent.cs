@@ -948,24 +948,24 @@ public class DodgeBallAgent : Agent
             case 0:
                 max_length = 50;
                 ball_interest = (4 - currentNumberOfBalls) / 2;
-                bush_interest = (float)0.3 * currentNumberOfBalls;
-                open_space_interest = x => (float)1;
-                view_open_space_interest = (float)0.5;
-                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01; //currentNumberOfBalls / 2;
-                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1; // (4 - currentNumberOfBalls) / 3 * 0;
-                rotation_in_movement_direction_interest = (float)0.5;
+                bush_interest = 0; //(float)0.2 * currentNumberOfBalls;
+                open_space_interest = x => (float)2;
+                view_open_space_interest = (float)0.7;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 50 - (float)0.01; //currentNumberOfBalls / 2;
+                agent_fear = 0; //currentNumberOfBalls > 2 ? 0 : (float)0.1; // (4 - currentNumberOfBalls) / 3 * 0;
+                rotation_in_movement_direction_interest = (float)0.3;
                 previous_movement_interest = (float)0.05;
                 break;
             case 1:
                 max_length = 50;
                 ball_interest = (4 - currentNumberOfBalls) / 4;
                 bush_interest = (float)0.7 * currentNumberOfBalls;
-                open_space_interest = x => -(x - (float)0.15) * (x - (float)0.15) * (float)10;
+                open_space_interest = x => x < (float)0.1 ? -(float)0.3 : (float)0.05; // -(x - (float)0.15) * (x - (float)0.15) * (float)10;
                 view_open_space_interest = (float)0.2;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
                 rotation_in_movement_direction_interest = (float)0.4;
-                previous_movement_interest = (float)0.5;
+                previous_movement_interest = (float)0.1;
                 n = 20;
                 break;
             case 2: // Random.Range((float)0, top_movment_sum)
@@ -1113,7 +1113,7 @@ public class DodgeBallAgent : Agent
         // MOVE AGENT
         double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
         double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
-        float eagerness = movement_angles[new_movement_angle] / 4 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
+        float eagerness = movement_angles[new_movement_angle] / 2 > 1 ? agentSpeed : (agentSpeed / 3) * (movement_angles[new_movement_angle] / 2) + agentSpeed / 3 * 2;
         var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
