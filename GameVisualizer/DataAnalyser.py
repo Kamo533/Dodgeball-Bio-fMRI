@@ -158,7 +158,10 @@ class DataAnalyzer:
 
 
     def count_event_occurences(self, event):
-        return self.df['EventType'].value_counts()[event]
+        try:
+            return self.df['EventType'].value_counts()[event]
+        except:
+            return 0
     
     
     def calculate_precision(self, player):
@@ -202,7 +205,17 @@ class DataAnalyzer:
     
 
     def calculate_time_between_pickup(self, player):
-        return self.df.elapsed_time.max() / self.df['EventType'].value_counts()[player + "PickedUpBall"]
+        non_game_time = pd.Timedelta(0).total_seconds()
+        sequence_start = None
+        for i, row in self.df.iterrows():
+            if row['EventType'] == 'GameEnd':
+                sequence_start = row['elapsed_time']
+            elif row['EventType'] == 'ResetScene':
+                sequence_end = row['elapsed_time']
+                sequence_duration = sequence_end - sequence_start
+                non_game_time += sequence_duration
+        total_time = self.df.elapsed_time.max() - non_game_time
+        return total_time / self.df['EventType'].value_counts()[player + "PickedUpBall"]
 
 
     def print_event_count(self, event='BlueThrewBall'):

@@ -13,6 +13,9 @@ RewardShaping97M_date = "2024-02-08_14-48-22"
 FSMNew_date = "2024-02-09_10-05-20"
 FSMNewV2_date = "2024-02-09_14-02-04"
 FSMNewV3_date = "2024-02-11_17-27-12"
+NEAT_date = "2024-02-12_20-54-24"
+FSM1_date = "2024-02-12_21-05-32"
+FSM2_date = "2024-02-12_21-12-46"
 
 y_delta = 34
 margin = 0
@@ -40,7 +43,7 @@ corners = define_corners()
 bushes = define_bushes()
 
 
-def define_zones(breadth_no=3, length_no=3):
+def define_zones(corners, breadth_no=3, length_no=3):
     """
     Define the zones the court should be divided in. Assume that the court is not tilted.
     breadth_no is the number the breadth should be divided in.
@@ -100,12 +103,13 @@ def define_hide_zone(distance=3):
 
 class AgentBehaviorAnalyzer:
 
-    def __init__(self, date="2024-02-07_14-44-25"):
+    def __init__(self, date="2024-02-07_14-44-25", fsm=False):
         self.date = date
         self.player_data = PlayerData(getLogData("PlayerData", date))
         self.position_data = PositionData(getLogData("Position", date))
         self.results_data = getLogData("Results", date)
-        self.zones = define_zones(1,2)
+        if fsm : self.zones = define_zones(define_corners(y_delta=0, margin=0.5), 1,2)
+        else : self.zones = define_zones(define_corners(y_delta=34), 1,2)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -247,24 +251,29 @@ class AgentBehaviorAnalyzer:
         pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.player_data.event_list))
         throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
         game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.player_data.event_list))
+        reset_list = list(filter(lambda event: (event.event_type == "ResetScene"), self.player_data.event_list))
         time_list = []
+
+        i = 0
         j = 0
-        for i in range(len(throw_list)):
-            throw_time = throw_list[i].timestamp
+        end_time = game_end_list[i].timestamp
+        reset_time = reset_list[i+1].timestamp
+        for throw in throw_list:
+            throw_time = throw.timestamp
+            pick_time = pick_list[j].timestamp
+            # Don't include the throws that occur between games
+            if throw_time > end_time and throw_time < reset_time:
+                pass
             # Only want the time if pickup and throw occurred in the same game
-            # Loop through pickups until we find the one in the same game
-            for k in range(i+j, len(pick_list)):
-                same_game = True
-                pick_time = pick_list[k].timestamp
-                # Loop through all timestamps where game ended
-                for end in game_end_list:
-                    end_time = end.timestamp
-                    if pick_time < end_time and throw_time > end_time:
-                        j += 1
-                        same_game = False
-                        break
-                if same_game:
-                    break
+            if throw_time > reset_time and i < len(reset_list):
+                while pick_time < reset_time:
+                    j += 1
+                    pick_time = pick_list[j].timestamp
+                i += 1
+                if i < len(game_end_list):
+                    end_time = game_end_list[i].timestamp
+                    if i < len(reset_list) - 1 : reset_time = reset_list[i+1].timestamp
+            j += 1
             time = throw_time - pick_time              
             time_list.append(time.total_seconds())
         return sum(time_list)/len(time_list)
@@ -313,6 +322,9 @@ class AgentBehaviorAnalyzer:
     
 
     def count_wins(self, agent="Blue"):
+        """
+        Count how many times the agent won a game
+        """
         iterator = iter(self.results_data.splitlines())
         count = 0
         for result_line in iterator:
@@ -491,6 +503,10 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
 
 def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[], agent="Blue"):
+    """
+    Compare statistics to find the agent with the most similar playstyle
+    A score close to 0 indicates a similar playstyle
+    """
     score_list = []
     for i in range(len(analyzers)):
         score = 0
@@ -506,6 +522,9 @@ def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[],
 
 
 def print_playstyle_table(analyzers=[], da_analyzers=[], labels=[], agent="Blue"):
+    """
+    Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles
+    """
     spacing = 12
     extra_spacing = 4
     print(" ".ljust(spacing+extra_spacing), end="")
@@ -518,8 +537,6 @@ def print_playstyle_table(analyzers=[], da_analyzers=[], labels=[], agent="Blue"
         for score in score_list:
             print(f'{round(score, 3)}'.ljust(spacing), end="")
         print()
-
-    
 
 
 def add_data_analyzer(date):
@@ -540,45 +557,58 @@ def print_divider():
     print("\n")
 
 
+def compare_multiple_agents(dates={}, agent="Purple"):
+    analyzers = []
+    da_analyzers = []
+    for game in dates.keys():
+        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], fsm=True)
+        else : analyzer = AgentBehaviorAnalyzer(dates[game])
+        da_analyzer = add_data_analyzer(dates[game])
+        analyzers.append(analyzer)
+        da_analyzers.append(da_analyzer)
+    print_divider()
+    compare(analyzers, da_analyzers, dates.keys(), agent)
+
+
 if __name__ == "__main__":
     print_divider()
-    mapoca = AgentBehaviorAnalyzer(date=MAPOCA_date)
-    il = AgentBehaviorAnalyzer(date=Imitation77M_date)
-    rl_43 = AgentBehaviorAnalyzer(date=Reinforcement43M_date)
-    rl_87 = AgentBehaviorAnalyzer(date=Reinforcement87M_date)
-    rs = AgentBehaviorAnalyzer(date=RewardShaping97M_date)
 
-    da_mapoca = add_data_analyzer(MAPOCA_date)
-    da_il = add_data_analyzer(Imitation77M_date)
-    da_rl_43 = add_data_analyzer(Reinforcement43M_date)
-    da_rl_87 = add_data_analyzer(Reinforcement87M_date)
-    da_rs = add_data_analyzer(RewardShaping97M_date)
+    dates_pre_study = {
+        "MA-POCA": MAPOCA_date,
+        "IL" : Imitation77M_date,
+        "RL-43M": Reinforcement43M_date,
+        "RL-87M": Reinforcement87M_date,
+        "RS": RewardShaping97M_date,
+        "NEAT": NEAT_date,
+        "FSM-V1": FSM1_date,
+        "FSM-V2": FSM2_date
+    }
 
-    corners = define_corners(y_delta=0)
-    bushes = define_bushes(y_delta=0)
-    fsm = AgentBehaviorAnalyzer(date=FSM_date)
-    fsm_new = AgentBehaviorAnalyzer(date=FSMNew_date)
-    fsm_new_v2 = AgentBehaviorAnalyzer(date=FSMNewV2_date)
-    fsm_new_v3 = AgentBehaviorAnalyzer(date=FSMNewV3_date)
-    da_fsm = add_data_analyzer(FSM_date)
-    da_fsm_new = add_data_analyzer(FSMNew_date)
-    da_fsm_new_v2 = add_data_analyzer(FSMNewV2_date)
-    da_fsm_new_v3 = add_data_analyzer(FSMNewV3_date)
+    compare_multiple_agents(dates_pre_study)
 
-    analyzers = [mapoca, il, rl_43, rl_87, rs, fsm_new_v3]
-    da_analyzers = [da_mapoca, da_il, da_rl_43, da_rl_87, da_rs, da_fsm_new_v3]
-    labels = ["MA-POCA", "IL", "RL-43M", "RL-87M", "RS", "FSM-3"]
-    blue_labels = ["Blue 1", "Blue 2", "Blue 3", "Blue 4", "Blue 5", "Blue 6", "Blue 7", "Blue 8"]
+    dates_user1 = {
+        "RL_1": "2024-02-11_20-52-26",
+        "RL_2": "2024-02-11_20-45-12",
+        "FSM_1": "2024-02-11_20-59-06",
+        "FSM_2": "2024-02-11_20-38-07",
+    }
+
+    dates_user2 = {
+        "RL_1": "2024-02-11_21-53-42",
+        "RL_2": "2024-02-11_22-08-03",
+        "FSM_1": "2024-02-11_21-58-33",
+        "FSM_2": "2024-02-11_22-03-24",
+    }
+
+    """ print("USER 1")
+    compare_multiple_agents(dates_user1, "Purple")
     print_divider()
+    print("USER 2")
+    compare_multiple_agents(dates_user2, "Purple")
+    print_divider() """
+
+    # print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
 
     # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
-
-    compare(analyzers, da_analyzers, labels, "Purple")
-    print_divider()
-
-    print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
-
-    # compare(analyzers, da_analyzers, blue_labels, "Blue")
-    # print_divider()
     
 
