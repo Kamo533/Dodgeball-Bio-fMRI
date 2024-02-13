@@ -980,6 +980,19 @@ public class DodgeBallAgent : Agent
                 previous_movement_interest = (float)0.9;
                 n = 20;
                 break;
+            case 3:
+                max_length = 50;
+                ball_interest = (4 - currentNumberOfBalls) / 3;
+                bush_interest = (float)0.4 * currentNumberOfBalls;
+                open_space_interest = x => (float)1; //-(x - (float)0.15) * (x - (float)0.15) * (float)10;
+                view_open_space_interest = (float)0.6;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 70;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
+                rotation_in_movement_direction_interest = (float)0.4;
+                previous_movement_interest = (float)0.1;
+                n = 20;
+
+                break;
             default:
                 max_length = 50;
                 ball_interest = (4 - currentNumberOfBalls) / 2;
@@ -1061,8 +1074,8 @@ public class DodgeBallAgent : Agent
             // If observe wall/bush
             // movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
             movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest(wall_obs.RayOutputs[i].HitFraction);
-            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? -(max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : 0;
-            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * view_open_space_interest;
+            //rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? -(max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest / 3 : 0;
+            rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction * view_open_space_interest / max_length;
 
             // Prefer continue in same direction
             if (Math.Abs(previousMovementAngle - 90) < 0.0001 && Math.Abs(previousMovementAngle - wall_spec.Angles[i]) < 0.0001)
@@ -1113,7 +1126,7 @@ public class DodgeBallAgent : Agent
         // MOVE AGENT
         double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
         double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
-        float eagerness = movement_angles[new_movement_angle] / 4 > 1 ? agentSpeed : agentSpeed * (movement_angles[new_movement_angle] / 5);
+        float eagerness = movement_angles[new_movement_angle] / 2 > 1 ? agentSpeed : (agentSpeed * 2 / 3) * (movement_angles[new_movement_angle] / 2) + agentSpeed / 3; // * 2 / 3;
         var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
