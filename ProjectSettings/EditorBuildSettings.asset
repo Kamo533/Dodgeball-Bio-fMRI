@@ -24,7 +24,7 @@ EditorBuildSettings:
     path: Assets/Dodgeball/Scenes/BaseLineClean.unity
     guid: ac1bc2f006acab54d9f6802f17c18b6a
   - enabled: 0
-    path: Assets/Dodgeball/Scenes/YELLOW.unity
+    path: Assets/Dodgeball/Scenes/EliminationFSM.unity
     guid: cfc8246885b44a54a905ff462bdac721
   - enabled: 0
     path: Assets/Dodgeball/Scenes/BaseLineStillOpponent.unity
