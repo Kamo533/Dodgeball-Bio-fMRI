@@ -16,6 +16,7 @@ FSMNewV3_date = "2024-02-11_17-27-12"
 NEAT_date = "2024-02-12_20-54-24"
 FSM1_date = "2024-02-12_21-05-32"
 FSM2_date = "2024-02-12_21-12-46"
+FSM0_date = "2024-02-13_10-48-30"
 
 y_delta = 34
 margin = 0
@@ -521,19 +522,28 @@ def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[],
     return score_list
 
 
-def print_playstyle_table(analyzers=[], da_analyzers=[], labels=[], agent="Blue"):
+def print_playstyle_table(dates={}, agent="Purple"):
     """
     Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles
     """
+    analyzers = []
+    da_analyzers = []
+    for game in dates.keys():
+        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], fsm=True)
+        else : analyzer = AgentBehaviorAnalyzer(dates[game])
+        da_analyzer = add_data_analyzer(dates[game])
+        analyzers.append(analyzer)
+        da_analyzers.append(da_analyzer)
+    print_divider()
     spacing = 12
     extra_spacing = 4
     print(" ".ljust(spacing+extra_spacing), end="")
-    for label in labels:
+    for label in dates.keys():
         print(label.ljust(spacing), end="")
     print("\n")
     for i in range(len(analyzers)):
         score_list = find_closest_playstyle(analyzers[i], da_analyzers[i], analyzers, da_analyzers, agent)
-        print(labels[i].ljust(spacing+extra_spacing), end="")
+        print(list(dates.keys())[i].ljust(spacing+extra_spacing), end="")
         for score in score_list:
             print(f'{round(score, 3)}'.ljust(spacing), end="")
         print()
@@ -581,10 +591,11 @@ if __name__ == "__main__":
         "RS": RewardShaping97M_date,
         "NEAT": NEAT_date,
         "FSM-V1": FSM1_date,
-        "FSM-V2": FSM2_date
+        "FSM-V2": FSM2_date,
+        "FSM-V0": FSM0_date,
     }
 
-    compare_multiple_agents(dates_pre_study)
+    # compare_multiple_agents(dates_pre_study)
 
     dates_user1 = {
         "RL_1": "2024-02-11_20-52-26",
@@ -607,7 +618,7 @@ if __name__ == "__main__":
     compare_multiple_agents(dates_user2, "Purple")
     print_divider() """
 
-    # print_playstyle_table(analyzers, da_analyzers, labels, agent="Purple")
+    print_playstyle_table(dates_pre_study, agent="Purple")
 
     # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
     
