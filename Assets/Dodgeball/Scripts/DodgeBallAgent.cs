@@ -986,7 +986,7 @@ public class DodgeBallAgent : Agent
                 bush_interest = (float)0.4 * currentNumberOfBalls;
                 open_space_interest = x => (float)1; //-(x - (float)0.15) * (x - (float)0.15) * (float)10;
                 view_open_space_interest = (float)0.6;
-                agent_interest = Mathf.Exp(currentNumberOfBalls) / 70;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
                 rotation_in_movement_direction_interest = (float)0.4;
                 previous_movement_interest = (float)0.1;
