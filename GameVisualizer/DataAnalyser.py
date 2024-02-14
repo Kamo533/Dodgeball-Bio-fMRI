@@ -6,11 +6,11 @@ import os
 
 class DataAnalyzer:
 
-    def __init__(self):
+    def __init__(self, subfolder=""):
         self.df = None
         args = sys.argv[1:]
         # self.folder_path = "C:\\Users\\Kamo\\Desktop\\testBuild\\Test\\Dodgeball\\Logs\\PlayerData\\" # args[0] # Change to folder path
-        self.folder_path = "Assets/Dodgeball/Logs/PlayerData/"
+        self.folder_path = "Assets/Dodgeball/Logs" + subfolder + "/PlayerData/"
         self.filename = ""
 
     def read_data(self):
@@ -212,8 +212,9 @@ class DataAnalyzer:
                 sequence_start = row['elapsed_time']
             elif row['EventType'] == 'ResetScene':
                 sequence_end = row['elapsed_time']
-                sequence_duration = sequence_end - sequence_start
-                non_game_time += sequence_duration
+                if sequence_start != None:
+                    sequence_duration = sequence_end - sequence_start
+                    non_game_time += sequence_duration
         total_time = self.df.elapsed_time.max() - non_game_time
         return total_time / self.df['EventType'].value_counts()[player + "PickedUpBall"]
 

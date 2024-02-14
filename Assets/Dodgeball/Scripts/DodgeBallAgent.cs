@@ -499,6 +499,10 @@ public class DodgeBallAgent : Agent
                 {
                     m_gameLogger.LogPlayerData(8); //Log player dash
                 }
+                else if (m_BehaviorParameters.TeamId == 1)
+                {
+                    m_gameLogger.LogPlayerData(12); //Log enemy dash
+                }
             }
         }
     }

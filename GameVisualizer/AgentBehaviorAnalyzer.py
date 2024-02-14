@@ -104,13 +104,13 @@ def define_hide_zone(distance=3):
 
 class AgentBehaviorAnalyzer:
 
-    def __init__(self, date="2024-02-07_14-44-25", fsm=False):
+    def __init__(self, date="2024-02-07_14-44-25", subfolder="", fsm=False):
         self.date = date
-        self.player_data = PlayerData(getLogData("PlayerData", date))
-        self.position_data = PositionData(getLogData("Position", date))
-        self.results_data = getLogData("Results", date)
+        self.player_data = PlayerData(getLogData("PlayerData", date, subfolder))
+        self.position_data = PositionData(getLogData("Position", date, subfolder))
+        self.results_data = getLogData("Results", date, subfolder)
         if fsm : self.zones = define_zones(define_corners(y_delta=0, margin=0.5), 1,2)
-        else : self.zones = define_zones(define_corners(y_delta=34), 1,2)
+        else : self.zones = define_zones(define_corners(y_delta=34, margin=0.5), 1,2)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -549,8 +549,8 @@ def print_playstyle_table(dates={}, agent="Purple"):
         print()
 
 
-def add_data_analyzer(date):
-    da = DataAnalyzer()
+def add_data_analyzer(date, subfolder=""):
+    da = DataAnalyzer(subfolder)
     da.filename = "GameLog_Player_Data_" + date + ".txt"
     if ".meta" not in da.filename:
         da.read_data()
@@ -567,21 +567,33 @@ def print_divider():
     print("\n")
 
 
-def compare_multiple_agents(dates={}, agent="Purple"):
+def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
     analyzers = []
     da_analyzers = []
     for game in dates.keys():
-        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], fsm=True)
-        else : analyzer = AgentBehaviorAnalyzer(dates[game])
-        da_analyzer = add_data_analyzer(dates[game])
+        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=True)
+        else : analyzer = AgentBehaviorAnalyzer(dates[game], subfolder)
+        da_analyzer = add_data_analyzer(dates[game], subfolder)
         analyzers.append(analyzer)
         da_analyzers.append(da_analyzer)
     print_divider()
     compare(analyzers, da_analyzers, dates.keys(), agent)
 
 
+def show_study_results(date_list=[{}], agent="Purple", subfolder=""):
+    i = 1
+    for dates in date_list:
+        print_divider()
+        print("USER", i, "---", agent)
+        print_divider()
+        compare_multiple_agents(dates, agent, subfolder)
+        i += 1
+
+
+
 if __name__ == "__main__":
-    print_divider()
+
+    # Pre study
 
     dates_pre_study = {
         "MA-POCA": MAPOCA_date,
@@ -595,7 +607,10 @@ if __name__ == "__main__":
         "FSM-V0": FSM0_date,
     }
 
-    # compare_multiple_agents(dates_pre_study)
+    # show_study_results([dates_pre_study], "Purple")
+
+
+    # Pilot study
 
     dates_user1 = {
         "RL_1": "2024-02-11_20-52-26",
@@ -611,15 +626,54 @@ if __name__ == "__main__":
         "FSM_2": "2024-02-11_22-03-24",
     }
 
-    """ print("USER 1")
-    compare_multiple_agents(dates_user1, "Purple")
-    print_divider()
-    print("USER 2")
-    compare_multiple_agents(dates_user2, "Purple")
-    print_divider() """
+    dates_user3 = {
+        "RL_1": "2024-02-11_21-53-42",
+        "RL_2": "2024-02-12_13-36-25",
+        "FSM_1": "2024-02-12_13-43-25",
+        "FSM_2": "2024-02-12_13-50-32",
+    }
 
-    print_playstyle_table(dates_pre_study, agent="Purple")
+    dates_user4 = {
+        "RL_1": "2024-02-12_15-27-58",
+        "RL_2": "2024-02-12_15-23-53",
+        "FSM_1": "2024-02-12_15-32-41",
+        "FSM_2": "2024-02-12_15-19-11",
+    }
 
-    # fsm_new.calculate_average_pickup_throw_time(agent="Blue")
+    # show_study_results([dates_user1, dates_user2, dates_user3, dates_user4], "Purple")
+
+
+    # Experiments
+
+    dates_fmri_1 = {
+        "FSM": "2024-02-13_19-19-16",
+        "RL": "2024-02-13_19-05-14"
+    }
+
+    dates_fmri_2 = {
+        "FSM": "2024-02-13_20-22-08",
+        "RL": "2024-02-13_20-36-09"
+    }
+
+    # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
+    # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
+
+    
+    dates_post_fmri = {
+        "FSM": "2024-02-14_16-35-48",
+        "RL": "2024-02-14_16-43-48"
+    }
+
+    show_study_results([dates_post_fmri], "Purple", "/Analyze")
+
+    # Not accessible
+    dates_pre_fmri = {
+        "FSM": "2024-02-13_15-57-30",
+        "RL": "2024-02-13_16-02-46"
+    }
+
+    # print_playstyle_table(dates_pre_study, agent="Purple")
+
+    
     
 
