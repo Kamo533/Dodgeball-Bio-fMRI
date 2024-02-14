@@ -96,6 +96,7 @@ crashlytics-build.properties
 Assets/Dodgeball/Logs/PlayerData/*
 Assets/Dodgeball/Logs/Results/*
 Assets/Dodgeball/Logs/Position/*
+Assets/Dodgeball/Logs/fMRITest/*
 
 # Mac file setting
 .DS_Store
