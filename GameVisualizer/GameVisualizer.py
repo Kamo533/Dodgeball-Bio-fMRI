@@ -4,11 +4,12 @@ from matplotlib.widgets import Slider, CheckButtons
 import numpy as np
 from datetime import datetime, timedelta
 from math import cos, sin, pi
+import time
 
 
 # Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-25_16-10-52.txt
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2024-01-30_15-46-27"  # time to plot #  2023-11-09_17-40-48
+date = "2024-02-13_19-05-14"  # time to plot #  2023-11-09_17-40-48
 game_type = "neat" # neat or fsm ...
 game_num = 2 # won't matter if show_all_games = True
 show_all_games = True
@@ -21,7 +22,7 @@ def getLogData(name, date=date) -> str:
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs"
+    log_path = "Assets/Dodgeball/Logs/fMRI"
 
     part_path = ""
     if name == "PlayerData":
@@ -120,13 +121,13 @@ class PlayerData:
                 self.corner = int(data[6])
 
         def isResetSceneEvent(self) -> bool:
-            return self.event_type == "ResetScene"
+            return self.event_type == "ResetScene" or self.event_type == "S"
         
         def isEndGameEvent(self) -> bool:
             return self.event_type == "GameEnd"
 
     def numGames(self) -> int:
-        return len(list(filter(lambda event: event.isResetSceneEvent(), self.event_list))) -1
+        return len(list(filter(lambda event: event.isResetSceneEvent(), self.event_list))) -2
     
     def getStartEndTimes(self, game_num: int = 0) -> tuple:
         """
@@ -136,7 +137,7 @@ class PlayerData:
         if game_num > self.numGames():
             raise Exception(f"Number of games is {self.numGames()}, cannot get times for game number {game_num}")
         
-        reset_scene_list = list(filter(lambda event: event.isResetSceneEvent(), self.event_list))
+        reset_scene_list = list(filter(lambda event: event.isResetSceneEvent(), self.event_list))[1::]
         end_game_list = list(filter(lambda event: event.isEndGameEvent(), self.event_list))
 
         # return reset_scene_list[game_num].timestamp, reset_scene_list[game_num+1].timestamp
@@ -499,9 +500,14 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
 
         # Update plot
         fig.canvas.draw_idle()
-    
+
     time_slider.on_changed(update_time)
 
+    def start_auto_slide():
+        auto_slide = True
+        while auto_slide == True:
+            update_time(time_slider.val + 0.01)
+            time.sleep(0.01)
 
     ax.legend(bbox_to_anchor=(-0.2, 0.5))
     plt.show()
