@@ -109,8 +109,10 @@ class AgentBehaviorAnalyzer:
         self.player_data = PlayerData(getLogData("PlayerData", date, subfolder))
         self.position_data = PositionData(getLogData("Position", date, subfolder))
         self.results_data = getLogData("Results", date, subfolder)
-        if fsm : self.zones = define_zones(define_corners(y_delta=0, margin=0.5), 1,2)
-        else : self.zones = define_zones(define_corners(y_delta=34, margin=0.5), 1,2)
+        if fsm : y_delta = 0
+        else : y_delta = 34
+        self.zones = define_zones(define_corners(y_delta=y_delta, margin=0.5), 1,2)
+        self.bushes = define_bushes(y_delta=y_delta)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -127,6 +129,19 @@ class AgentBehaviorAnalyzer:
         """
         closest = self.find_closest_timestamp_in_positions(timestamp=timestamp)
         return next((position for position in self.position_data.pos_list if position.timestamp == closest), None)
+    
+
+    def get_position(self, pos_entry, agent="Blue"):
+        if agent == "Blue" : pos = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
+        else : pos = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
+        return pos
+    
+
+    def get_opponent_position(self, pos_entry, agent="Blue"):
+        if agent == "Blue" : pos = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
+        else : pos = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
+        return pos
+
 
 
     def calculate_distance_between_agents(self, timestamp):
@@ -137,6 +152,16 @@ class AgentBehaviorAnalyzer:
         pos_blue = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
         pos_purple = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
         return math.dist(pos_blue, pos_purple)
+    
+
+    def calculate_average_distance_between_agents(self):
+        """
+        Calculate the average distance between agents.
+        """
+        dist_sum = 0
+        for pos_entry in self.position_data.pos_list:
+            dist_sum += math.dist(self.get_position(pos_entry, "Blue"), self.get_position(pos_entry, "Purple"))
+        return dist_sum/len(self.position_data.pos_list)
 
 
     def calculate_average_throw_distance(self, agent="Blue"):
@@ -239,7 +264,7 @@ class AgentBehaviorAnalyzer:
 
     def find_start_zone(self, agent="Blue"):
         """
-        Return the zone where the agent is in the beginning of the game
+        Return the zone where the agent is in the beginning of the game.
         """
         timestamp = self.position_data.pos_list[0].timestamp
         return self.find_agent_zone(timestamp, agent)
@@ -247,7 +272,7 @@ class AgentBehaviorAnalyzer:
 
     def calculate_average_pickup_throw_time(self, agent="Blue"):
         """
-        Calculate the how long it takes on average for the agent to throw the ball after pickup
+        Calculate the how long it takes on average for the agent to throw the ball after pickup.
         """
         pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.player_data.event_list))
         throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
@@ -282,8 +307,8 @@ class AgentBehaviorAnalyzer:
 
     def calculate_rotation_change_percentage(self, agent="Blue"):
         """
-        Calculate the percentage of the movements that are a rotation change in the opposite direction
-        AI agents tend to have more jerky movements and thus a higher percentage
+        Calculate the percentage of the movements that are a rotation change in the opposite direction.
+        AI agents tend to have more jerky movements and thus a higher percentage.
         """
         rot_change_count = 0
         right_turn = True
@@ -301,30 +326,58 @@ class AgentBehaviorAnalyzer:
         return rot_change_count/len(self.position_data.pos_list)
     
 
+    # NOT IN USE
     def is_close_to_bush(self, timestamp, agent="Blue", distance=3):
         """
-        Return True if agent is within a given distance from a bush for a given timestamp
+        Return True if agent is within a given distance from a bush for a given timestamp.
         """
         pos_entry = self.get_position_data(timestamp)
-        if agent == "Blue" : pos = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
-        else : pos = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
+        pos = self.get_position(pos_entry, agent)
         for bush in bushes:
             for bush_part in bush:
                 if math.dist(pos, bush_part) < distance : return True
         return False
     
 
+    # NOT IN USE
     def calculate_bush_closeness_percentage(self, agent="Blue", distance=3):
         """
-        Calculate the percentage of time the agent spends within a given distance from a bush
+        Calculate the percentage of time the agent spends within a given distance from a bush.
         """
         close_list = list(filter(lambda pos: (self.is_close_to_bush(pos.timestamp, agent, distance)), self.position_data.pos_list))
         return len(close_list)/len(self.position_data.pos_list)
     
 
+    def calculate_hiding_percentage(self, agent="Blue"):
+        """
+        Calculate the percentage of time the agent spends hiding from the opponent behind a bush.
+        """
+        def counter_clockwise(A, B, C):
+            return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+        
+        def lines_crossing(pos1, pos2, bush1, bush2):
+            return counter_clockwise(pos1, bush1, bush2) != counter_clockwise(pos2, bush1, bush2) and counter_clockwise(pos1, pos2, bush1) != counter_clockwise(pos1, pos2, bush2)
+        
+        def close_to_bush(pos, bush, distance=3):
+            for bush_part in bush:
+                if math.dist(pos, bush_part) < distance : return True
+        
+        hiding_count = 0
+        for pos_entry in self.position_data.pos_list:
+            pos = self.get_position(pos_entry, agent)
+            pos_opponent = self.get_opponent_position(pos_entry, agent)
+            for bush in self.bushes:
+                bush_start, bush_end = bush[0], bush[-1]
+                # Is hiding if the line between the agents is crossing the bush and the agent is close to that bush
+                if lines_crossing(pos, pos_opponent, bush_start, bush_end) and close_to_bush(pos, bush):
+                    hiding_count += 1
+        return hiding_count/len(self.position_data.pos_list)
+
+    
+
     def count_wins(self, agent="Blue"):
         """
-        Count how many times the agent won a game
+        Count how many times the agent won a game.
         """
         iterator = iter(self.results_data.splitlines())
         count = 0
@@ -333,6 +386,24 @@ class AgentBehaviorAnalyzer:
             if "Winner: " + agent in data[1]:
                 count += 1
         return count
+    
+
+    def find_move_away_percentage(self, agent="Blue"):
+        """
+        Calculate the percentage of time the agent spends moving away from its opponent.
+        """
+        move_away_count = 0
+        prev_pos_entry = self.position_data.pos_list[0]
+        prev_distance = self.calculate_distance_between_agents(prev_pos_entry.timestamp)
+        prev_opponent_pos = self.get_opponent_position(prev_pos_entry, agent)
+        for pos_entry in self.position_data.pos_list[1:]:
+            pos = self.get_position(pos_entry, agent)
+            new_distance = math.dist(pos, prev_opponent_pos)
+            if new_distance > prev_distance:
+                move_away_count += 1
+            prev_distance = self.calculate_distance_between_agents(pos_entry.timestamp)
+            prev_opponent_pos = self.get_opponent_position(pos_entry, agent)
+        return move_away_count/len(self.position_data.pos_list)
     
 
     def print_all_data(self):
@@ -376,8 +447,8 @@ class AgentBehaviorAnalyzer:
 
         print()
 
-        print("Percentage of time Blue is close to a bush:", round(self.calculate_bush_closeness_percentage("Blue", 3)*100, 3), "%")
-        print("Percentage of time Purple is close to a bush:", round(self.calculate_bush_closeness_percentage("Purple")*100, 3), "%")
+        # print("Percentage of time Blue is close to a bush:", round(self.calculate_bush_closeness_percentage("Blue", 3)*100, 3), "%")
+        # print("Percentage of time Purple is close to a bush:", round(self.calculate_bush_closeness_percentage("Purple")*100, 3), "%")
 
 
 
@@ -458,6 +529,16 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
+    print("Moves away".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Is hiding".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_hiding_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
     print()
 
     print("Avg ball hold".ljust(spacing+extra_spacing), end="")
@@ -484,6 +565,12 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     for a in analyzers:
         print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)} s'.ljust(spacing), end="")
     print()
+
+    print("Avg agent distance".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_average_distance_between_agents(), 3)}'.ljust(spacing), end="")
+    print()
+
 
     print()
 
@@ -593,7 +680,7 @@ def show_study_results(date_list=[{}], agent="Purple", subfolder=""):
 
 if __name__ == "__main__":
 
-    # Pre study
+    # ====================== Pre study ==========================
 
     dates_pre_study = {
         "MA-POCA": MAPOCA_date,
@@ -609,8 +696,10 @@ if __name__ == "__main__":
 
     # show_study_results([dates_pre_study], "Purple")
 
+    # ===========================================================
 
-    # Pilot study
+
+    # ====================== Pilot study ========================
 
     dates_user1 = {
         "RL_1": "2024-02-11_20-52-26",
@@ -640,10 +729,13 @@ if __name__ == "__main__":
         "FSM_2": "2024-02-12_15-19-11",
     }
 
-    # show_study_results([dates_user1, dates_user2, dates_user3, dates_user4], "Purple")
+    dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
+    # show_study_results(dates_pilot, "Purple")
+
+    # ===========================================================
 
 
-    # Experiments
+    # ======================= Experiments =======================
 
     dates_fmri_1 = {
         "FSM": "2024-02-13_19-19-16",
@@ -655,8 +747,10 @@ if __name__ == "__main__":
         "RL": "2024-02-13_20-36-09"
     }
 
-    # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
+    show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
     # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
+
+    # =========================================================
 
     
     dates_post_fmri = {
@@ -664,7 +758,7 @@ if __name__ == "__main__":
         "RL": "2024-02-14_16-43-48"
     }
 
-    show_study_results([dates_post_fmri], "Purple", "/Analyze")
+    # show_study_results([dates_post_fmri], "Purple", "/Analyze")
 
     # Not accessible
     dates_pre_fmri = {
