@@ -168,7 +168,6 @@ public class DodgeBallAgent : Agent
 
             if (useRuleBasedAgent)
             {
-                // Debug.Log("Interesting stuff follows");
 
                 AgentRaycastSensor = transform.Find("AgentRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
                 BackRaycastSensor = transform.Find("BackRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
@@ -495,10 +494,6 @@ public class DodgeBallAgent : Agent
             if (m_DashInput > 0 && m_DashCoolDownReady)
             {
                 m_CubeMovement.Dash(moveDir);
-                if (m_BehaviorParameters.TeamId == 0)
-                {
-                    m_gameLogger.LogPlayerData(8); //Log player dash
-                }
             }
         }
     }
@@ -993,6 +988,19 @@ public class DodgeBallAgent : Agent
                 n = 20;
 
                 break;
+            case 4:
+                max_length = 50;
+                ball_interest = (4 - currentNumberOfBalls) / 4;
+                bush_interest = (float)0.4 * currentNumberOfBalls + (float)0.01;
+                open_space_interest = x => (float)1; //-(x - (float)0.15) * (x - (float)0.15) * (float)10;
+                view_open_space_interest = (float)0.6;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
+                rotation_in_movement_direction_interest = 0;//(float)0.4;
+                previous_movement_interest = 0;//(float)0.1;
+                n = 20;
+
+                break;
             default:
                 max_length = 50;
                 ball_interest = (4 - currentNumberOfBalls) / 2;
@@ -1033,8 +1041,6 @@ public class DodgeBallAgent : Agent
                 case -1: // Not hit agent or hit something else
                     break;
                 case 0: // Hit agent
-                    // Want to look directly at agent
-
                     break;
                 case 1: // Hit agent front
 
@@ -1095,7 +1101,7 @@ public class DodgeBallAgent : Agent
         // float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
         IOrderedEnumerable<KeyValuePair<float, float>> sorted_movement = movement_angles.OrderByDescending(x => x.Value);
-        Debug.Log($"Five highest values: {sorted_movement.ElementAt(0).Value}, {sorted_movement.ElementAt(1).Value}, {sorted_movement.ElementAt(2).Value}, {sorted_movement.ElementAt(3).Value}, {sorted_movement.ElementAt(4).Value}");
+        // Debug.Log($"Five highest values: {sorted_movement.ElementAt(0).Value}, {sorted_movement.ElementAt(1).Value}, {sorted_movement.ElementAt(2).Value}, {sorted_movement.ElementAt(3).Value}, {sorted_movement.ElementAt(4).Value}");
         // Get weighted random choice from the top n best
         // NEW MOVMENT DIRECTION
         float top_movment_sum = 0;

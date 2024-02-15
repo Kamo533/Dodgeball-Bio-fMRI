@@ -49,7 +49,7 @@ namespace MLAgents
         private float m_YawSmoothV; // USED FOR AIMING WITH MOUSE
         Quaternion originalRotation;
         public float rotateSpeed = 100f; // Amount the player should turn while holding the turn button
-        
+
         [Header("Gamelog")]
         public GameLogger gameLogger;
 
@@ -82,7 +82,7 @@ namespace MLAgents
             var envParameters = Academy.Instance.EnvironmentParameters;
             m_Input = GetComponent<DodgeBallAgentInput>();
         }
-        
+
         public static float ClampAngle(float angle, float min, float max)
         {
             if (angle < -360F)
@@ -91,7 +91,7 @@ namespace MLAgents
                 angle -= 360F;
             return Mathf.Clamp(angle, min, max);
         }
-        
+
         // USED FOR ROTATION WITH Z AND X
         // public void LookZX() {
         //     float rotateAmount = 0f;
@@ -102,7 +102,7 @@ namespace MLAgents
         //     }
         //     transform.Rotate(Vector3.up, rotateAmount * rotateSpeed * Time.deltaTime);
         // }
-        
+
         // USED FOR AIMING WITH MOUSE
         public void Look(float xRot = 0)
         {
@@ -111,12 +111,12 @@ namespace MLAgents
             m_SmoothYaw = Mathf.SmoothDampAngle(m_SmoothYaw, m_Yaw, ref m_YawSmoothV, MouseSmoothTime);
             rb.MoveRotation(rb.rotation * Quaternion.AngleAxis(Mathf.DeltaAngle(smoothYawOld, m_SmoothYaw), transform.up));
         }
-        
+
         // USED FOR AIMING WITH THE TETHYX JOYSTICK
         public void LookT()
         {
             float tethyxInput = Input.GetAxis("TethyxHorizontal");
-            
+
             tethyxInput *= 1.5f;
             // Upper deadzone + then compensating the speed to achieve same max rotational speed.
             tethyxInput = Mathf.Clamp(tethyxInput, -0.3f, 0.4f);
@@ -154,17 +154,17 @@ namespace MLAgents
             if (!ReferenceEquals(null, m_Input))
             {
                 rotate = m_Input.rotateInput;
-                
+
                 /*
                  * Note:
                  * The Tethyx Trainer control doesnt reach the same speed as the button inputs does. It maxes out around
                  * 8, while the button inputs reach speeds of around 9.4. This feels a bit wonky and should probably be
                  * accounted for.
                  */
-                
+
                 // inputH = Input.GetAxis("TethyxHorizontal"); //For movement with Tethyx Joystick
                 inputV = Input.GetAxis("TethyxVertical"); //For movement with Tethyx Joystick
-                
+
                 inputH = m_Input.moveInput.x; // For movement with WASD
                 // inputV = m_Input.moveInput.y; // For movement with WASD
             }
@@ -191,6 +191,16 @@ namespace MLAgents
                 rb.velocity = Vector3.zero;
                 rb.AddForce(dir.normalized * dashBoostForce, dashForceMode);
                 dashCoolDownTimer = 0;
+
+                switch (m_Agent.teamID)
+                {
+                    case 0:
+                        m_Agent.m_gameLogger.LogPlayerData(8); // Log player (blue) dash
+                        break;
+                    case 1:
+                        m_Agent.m_gameLogger.LogPlayerData(12); // Log opponent (purple) dash
+                        break;
+                }
             }
         }
 
