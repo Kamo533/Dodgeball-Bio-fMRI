@@ -175,24 +175,6 @@ public class DodgeBallAgent : Agent
                 WallRaycastSensor = transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>();
 
                 previousMovementAngle = 90; // 90 as in straight forward
-                // fsm_version = 0;
-
-                // //Debug.Log(transform.Find("WallRaycastSensor").GetComponent<RayPerceptionSensorComponent3D>());
-                // //Debug.Log(WallRaycastSensor.GetObservationShape());
-                // RayPerceptionInput spec = WallRaycastSensor.GetRayPerceptionInput();
-                // RayPerceptionOutput obs = RayPerceptionSensor.Perceive(spec);
-                // //Debug.Log(spec.Angles);
-
-                // foreach (var angle in spec.Angles)
-                // {
-                //     Debug.Log(angle);
-                // }
-
-                // foreach (var o in obs.RayOutputs)
-                // {
-                //     Debug.Log(o.HitTagIndex);
-                //     Debug.Log(o.HitFraction);
-                // }
             }
 
             //If we don't have a home base, just use the starting position.
@@ -990,14 +972,14 @@ public class DodgeBallAgent : Agent
                 break;
             case 4:
                 max_length = 50;
-                ball_interest = (4 - currentNumberOfBalls) / 4;
-                bush_interest = (float)0.4 * currentNumberOfBalls + (float)0.01;
+                ball_interest = Mathf.Log(6, -currentNumberOfBalls + 5); //(4 - currentNumberOfBalls) / 5;
+                bush_interest = (float)0.4 * currentNumberOfBalls + (float)0.05;
                 open_space_interest = x => (float)1; //-(x - (float)0.15) * (x - (float)0.15) * (float)10;
                 view_open_space_interest = (float)0.6;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
-                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
-                rotation_in_movement_direction_interest = 0;//(float)0.4;
-                previous_movement_interest = 0;//(float)0.1;
+                agent_fear = currentNumberOfBalls > 2 ? (float)0 : (float)0.5;
+                rotation_in_movement_direction_interest = 0; //(float)0.4;
+                previous_movement_interest = 0;// (float)0.1;
                 n = 20;
 
                 break;
