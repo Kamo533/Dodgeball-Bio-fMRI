@@ -17,12 +17,12 @@ show_all_games = True
 timestamp_format = "%H:%M:%S.%f"
 
 
-def getLogData(name, date=date) -> str:
+def getLogData(name, date=date, subfolder="") -> str:
     """
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs/fMRI"
+    log_path = "Assets/Dodgeball/Logs" + subfolder
 
     part_path = ""
     if name == "PlayerData":
