@@ -1,0 +1,4 @@
+Time: 14:52:10.568, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 14:53:06.411, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 14:53:42.631, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 14:54:54.147, Winner: Blue, Blue lives left: 2, Purple lives left: 0
