@@ -609,16 +609,16 @@ def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[],
     return score_list
 
 
-def print_playstyle_table(dates={}, agent="Purple"):
+def print_playstyle_table(dates={}, agent="Purple", subfolder=""):
     """
     Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles
     """
     analyzers = []
     da_analyzers = []
     for game in dates.keys():
-        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], fsm=True)
-        else : analyzer = AgentBehaviorAnalyzer(dates[game])
-        da_analyzer = add_data_analyzer(dates[game])
+        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], fsm=True, subfolder=subfolder)
+        else : analyzer = AgentBehaviorAnalyzer(dates[game], subfolder=subfolder)
+        da_analyzer = add_data_analyzer(dates[game], subfolder=subfolder)
         analyzers.append(analyzer)
         da_analyzers.append(da_analyzer)
     print_divider()
@@ -694,7 +694,8 @@ if __name__ == "__main__":
         "FSM-V0": FSM0_date,
     }
 
-    # show_study_results([dates_pre_study], "Purple")
+    # show_study_results([dates_pre_study], "Purple", "/PreStudy")
+    print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
 
     # ===========================================================
 
@@ -730,7 +731,7 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    # show_study_results(dates_pilot, "Purple")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
 
     # ===========================================================
 
@@ -747,7 +748,7 @@ if __name__ == "__main__":
         "RL": "2024-02-13_20-36-09"
     }
 
-    show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
+    # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
     # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
 
     # =========================================================
@@ -760,13 +761,12 @@ if __name__ == "__main__":
 
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
 
+    
     # Not accessible
     dates_pre_fmri = {
         "FSM": "2024-02-13_15-57-30",
         "RL": "2024-02-13_16-02-46"
     }
-
-    # print_playstyle_table(dates_pre_study, agent="Purple")
 
     
     
