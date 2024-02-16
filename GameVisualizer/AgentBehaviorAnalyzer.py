@@ -575,13 +575,13 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     print()
 
     print("On blue side".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
+    #for a in analyzers:
+        #print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("On purple side".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
+    #for a in analyzers:
+        #print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     """ print("Close to bush".ljust(spacing+extra_spacing), end="")
@@ -731,7 +731,7 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    show_study_results(dates_pilot, "Purple")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudyNew")
 
     # ===========================================================
 
