@@ -575,13 +575,13 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     print()
 
     print("On blue side".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
+    #for a in analyzers:
+        #print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("On purple side".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
+    #for a in analyzers:
+        #print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     """ print("Close to bush".ljust(spacing+extra_spacing), end="")
@@ -695,7 +695,7 @@ if __name__ == "__main__":
     }
 
     # show_study_results([dates_pre_study], "Purple", "/PreStudy")
-    print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
+    # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
 
     # ===========================================================
 
@@ -717,7 +717,7 @@ if __name__ == "__main__":
     }
 
     dates_user3 = {
-        "RL_1": "2024-02-11_21-53-42",
+        "RL_1": "2024-02-12_13-57-56",
         "RL_2": "2024-02-12_13-36-25",
         "FSM_1": "2024-02-12_13-43-25",
         "FSM_2": "2024-02-12_13-50-32",
@@ -731,7 +731,7 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudyNew")
 
     # ===========================================================
 
