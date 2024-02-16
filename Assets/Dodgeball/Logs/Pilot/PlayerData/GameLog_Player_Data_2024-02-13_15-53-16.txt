@@ -1,0 +1,11 @@
+Timestamp,EventType,BlueBallsLeft,PurpleBallsLeft,BlueLives,PurpleLives,Corner
+15:53:16.367,Init,0,3,3,0
+15:53:16.367,ResetScene,0,0,3,3,0
+15:53:18.702,S,0,0,3,3,0
+15:53:20.468,BluePickedUpBall,1,0,3,3,0
+15:53:21.092,BluePickedUpBall,2,0,3,3,0
+15:53:23.997,PurplePickedUpBall,2,1,3,3,0
+15:53:24.067,PurplePickedUpBall,2,2,3,3,0
+15:53:26.814,PurpleThrewBall,2,1,3,3,0
+15:53:26.996,BluePickedUpBall,3,1,3,3,0
+15:53:27.542,PurplePickedUpBall,3,2,3,3,0
