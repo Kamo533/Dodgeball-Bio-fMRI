@@ -245,6 +245,7 @@ public class DodgeBallGameController : MonoBehaviour
         yield return new WaitForSecondsRealtime(1);
         Time.timeScale = 1;
         CountDownText.gameObject.SetActive(false);
+        gameLogger.LogPlayerData(13); // Log finish countdown
     }
 
 
