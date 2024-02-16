@@ -388,7 +388,7 @@ public class DodgeBallGameController : MonoBehaviour
         {
             foreach (var item in Team0Players)
             {
-                if (!item.Agent.Stunned && CurrentSceneType == SceneType.Movie)
+                if (!item.Agent.Stunned && (CurrentSceneType == SceneType.Movie || CurrentSceneType == SceneType.Game))
                 {
                     item.Agent.Dancing = true;
                     yield return new WaitForSeconds(0.2f);
@@ -404,7 +404,7 @@ public class DodgeBallGameController : MonoBehaviour
         {
             foreach (var item in Team1Players)
             {
-                if (!item.Agent.Stunned && CurrentSceneType == SceneType.Movie)
+                if (!item.Agent.Stunned && (CurrentSceneType == SceneType.Movie || CurrentSceneType == SceneType.Game))
                 {
                     item.Agent.Dancing = true;
                     yield return new WaitForSeconds(0.2f);

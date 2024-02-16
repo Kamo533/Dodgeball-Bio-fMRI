@@ -867,29 +867,10 @@ public class DodgeBallAgent : Agent
     private void MoveRuleBasedAgent(in ActionBuffers actionsOut)
     {
 
-        // //SPINNY CODE
-        // Vector3 direction = (targetPosition - transform.position).normalized;
-        // float targetRotation = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-        // m_CubeMovement.Look(targetRotation);
-        // var moveDir = transform.TransformDirection(new Vector3(direction.x * agentSpeed, 0, direction.z * agentSpeed));
-        // m_CubeMovement.RunOnGround(moveDir);
-
-        // RayPerceptionInput spec = WallRaycastSensor.GetRayPerceptionInput();
-        // RayPerceptionOutput obs = RayPerceptionSensor.Perceive(spec);
-        // //Debug.Log(spec.Angles);
-
-        // foreach (var angle in spec.Angles)
-        // {
-        //     Debug.Log(angle);
-        // }
-
-        // foreach (var o in obs.RayOutputs)
-        // {
-        //     Debug.Log(o.HitTagIndex);
-        //     Debug.Log(o.HitFraction);
-        // }
-
-
+        if (Stunned)
+        {
+            return;
+        }
 
 
         // OBSERVE
@@ -911,7 +892,6 @@ public class DodgeBallAgent : Agent
         float max_length;
         float ball_interest;
         float bush_interest;
-        //float open_space_interest;
         Func<float, float> open_space_interest;
         float view_open_space_interest;
         float agent_interest;
@@ -928,8 +908,8 @@ public class DodgeBallAgent : Agent
                 bush_interest = (float)0.3 * currentNumberOfBalls;
                 open_space_interest = x => (float)1;
                 view_open_space_interest = (float)0.5;
-                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01; //currentNumberOfBalls / 2;
-                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1; // (4 - currentNumberOfBalls) / 3 * 0;
+                agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
+                agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1;
                 rotation_in_movement_direction_interest = (float)0.5;
                 previous_movement_interest = (float)0.05;
                 break;
@@ -945,7 +925,7 @@ public class DodgeBallAgent : Agent
                 previous_movement_interest = (float)0.5;
                 n = 20;
                 break;
-            case 2: // Random.Range((float)0, top_movment_sum)
+            case 2:
                 max_length = 50;
                 ball_interest = Random.Range((float)0, (4 - currentNumberOfBalls) / 8);
                 bush_interest = (float)1.5 + (float)0.4 * currentNumberOfBalls;
@@ -972,14 +952,14 @@ public class DodgeBallAgent : Agent
                 break;
             case 4:
                 max_length = 50;
-                ball_interest = Mathf.Log(6, -currentNumberOfBalls + 5); //(4 - currentNumberOfBalls) / 5;
+                ball_interest = Mathf.Log(6, -currentNumberOfBalls + 5);
                 bush_interest = (float)0.4 * currentNumberOfBalls + (float)0.05;
                 open_space_interest = x => (float)1; //-(x - (float)0.15) * (x - (float)0.15) * (float)10;
                 view_open_space_interest = (float)0.6;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? (float)0 : (float)0.5;
-                rotation_in_movement_direction_interest = 0; //(float)0.4;
-                previous_movement_interest = 0;// (float)0.1;
+                rotation_in_movement_direction_interest = 0;
+                previous_movement_interest = 0;
                 n = 20;
 
                 break;
@@ -1007,10 +987,11 @@ public class DodgeBallAgent : Agent
             movement_angles[angle] = (float)0;
             rotation_angles[angle] = (float)0;
         }
-        foreach (float angle in back_spec.Angles)
-        {
-            movement_angles[angle] = (float)0;
-        }
+        // foreach (float angle in back_spec.Angles)
+        // {
+        //     movement_angles[angle] = (float)0;
+        //     rotation_angles[angle] = (float)0;
+        // }
 
 
         // NEW MOVEMENT AND ROTATION DIRECTION
@@ -1079,11 +1060,8 @@ public class DodgeBallAgent : Agent
 
         // GET BEST ANGLE FOR MOVEMENT AND ROTATION
         float new_movement_angle = movement_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
-        // rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
-        // float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
         IOrderedEnumerable<KeyValuePair<float, float>> sorted_movement = movement_angles.OrderByDescending(x => x.Value);
-        // Debug.Log($"Five highest values: {sorted_movement.ElementAt(0).Value}, {sorted_movement.ElementAt(1).Value}, {sorted_movement.ElementAt(2).Value}, {sorted_movement.ElementAt(3).Value}, {sorted_movement.ElementAt(4).Value}");
         // Get weighted random choice from the top n best
         // NEW MOVMENT DIRECTION
         float top_movment_sum = 0;

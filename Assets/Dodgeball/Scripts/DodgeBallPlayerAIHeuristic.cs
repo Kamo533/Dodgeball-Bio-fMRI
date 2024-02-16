@@ -76,23 +76,23 @@ public class DodgeBallPlayerAIHeuristic : MonoBehaviour
         //        Vector3 dir = target.position - transform.position;
         Vector3 moveDir = targetPos - transform.position;
         Vector3 lookDir = (LookAtTarget.position - transform.position).normalized;
-        if (RunTowardsTarget)
-        {
-            if (OnlyWalkIfCanSeeTarget && canCurrentlySeeTarget)
-            {
-                moveController.RunOnGround(moveDir.normalized);
-            }
-            else
-            {
-                moveController.RunOnGround(moveDir.normalized);
+        // if (RunTowardsTarget)
+        // {
+        //     if (OnlyWalkIfCanSeeTarget && canCurrentlySeeTarget)
+        //     {
+        //         moveController.RunOnGround(moveDir.normalized);
+        //     }
+        //     else
+        //     {
+        //         moveController.RunOnGround(moveDir.normalized);
 
-            }
-        }
+        //     }
+        // }
 
-        if (RotateTowardsTarget)
-        {
-            moveController.RotateTowards(lookDir, MaxRotationRate);
-        }
+        // if (RotateTowardsTarget)
+        // {
+        //     moveController.RotateTowards(lookDir, MaxRotationRate);
+        // }
 
         if (OnlyShootIfCanSeeTarget && canCurrentlySeeTarget && m_Agent)
         {
@@ -101,10 +101,10 @@ public class DodgeBallPlayerAIHeuristic : MonoBehaviour
             {
                 m_Agent.ThrowTheBall();
             }
-            else
-            {
-                moveController.RunOnGround(moveDir.normalized);
-            }
+            // else
+            // {
+            //     moveController.RunOnGround(moveDir.normalized);
+            // }
         }
 
         // if (OnlyShootIfCanSeeTarget && canCurrentlySeeTarget && ThrowController)
