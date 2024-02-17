@@ -245,7 +245,6 @@ public class DodgeBallGameController : MonoBehaviour
         yield return new WaitForSecondsRealtime(1);
         Time.timeScale = 1;
         CountDownText.gameObject.SetActive(false);
-        gameLogger.LogPlayerData(13); // Log finish countdown
     }
 
 
@@ -388,7 +387,7 @@ public class DodgeBallGameController : MonoBehaviour
         {
             foreach (var item in Team0Players)
             {
-                if (!item.Agent.Stunned && (CurrentSceneType == SceneType.Movie || CurrentSceneType == SceneType.Game))
+                if (!item.Agent.Stunned && CurrentSceneType == SceneType.Movie)
                 {
                     item.Agent.Dancing = true;
                     yield return new WaitForSeconds(0.2f);
@@ -404,7 +403,7 @@ public class DodgeBallGameController : MonoBehaviour
         {
             foreach (var item in Team1Players)
             {
-                if (!item.Agent.Stunned && (CurrentSceneType == SceneType.Movie || CurrentSceneType == SceneType.Game))
+                if (!item.Agent.Stunned && CurrentSceneType == SceneType.Movie)
                 {
                     item.Agent.Dancing = true;
                     yield return new WaitForSeconds(0.2f);
@@ -418,7 +417,7 @@ public class DodgeBallGameController : MonoBehaviour
         }
         //int random_sec = rnd.Next(10); // number between 0 and 9
         var random_sec = Random.Range(0, 10);
-        yield return new WaitForSeconds(7f - totalTimeSpent + random_sec); // Change here to have longer win screen
+        yield return new WaitForSeconds(/* 7f */ 1f - totalTimeSpent /* + random_sec */); // Change here to have longer win screen
 
         winTextGO.SetActive(false);
         ResetScene();

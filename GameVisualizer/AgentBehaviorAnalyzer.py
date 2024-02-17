@@ -575,13 +575,13 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     print()
 
     print("On blue side".ljust(spacing+extra_spacing), end="")
-    #for a in analyzers:
-        #print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("On purple side".ljust(spacing+extra_spacing), end="")
-    #for a in analyzers:
-        #print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
 
     """ print("Close to bush".ljust(spacing+extra_spacing), end="")
