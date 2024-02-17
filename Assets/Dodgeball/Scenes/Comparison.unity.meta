@@ -1,5 +1,14 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: a783b48b480864aeaaae7db9370f6fc4
+=======
+<<<<<<< HEAD:Assets/Dodgeball/Logs/Results.meta
+guid: 0bb241a0c71a9af4286d10456b677c00
+folderAsset: yes
+=======
+guid: a783b48b480864aeaaae7db9370f6fc4
+>>>>>>> Create comparison scene:Assets/Dodgeball/Scenes/Comparison.unity.meta
+>>>>>>> Create comparison scene
 DefaultImporter:
   externalObjects: {}
   userData: 
