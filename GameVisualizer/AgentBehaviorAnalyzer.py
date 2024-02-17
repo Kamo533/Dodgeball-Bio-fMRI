@@ -862,7 +862,7 @@ if __name__ == "__main__":
 
     show_study_results([elen, sindre], "Purple", "/ElenTest")
     show_study_results([elen, sindre], "Blue", "/ElenTest")
-    
+
     dates_comparison = {
         "FSM-RL": "2024-02-23_12-30-10",
         "FSM-RL 2": "2024-02-23_12-48-03",

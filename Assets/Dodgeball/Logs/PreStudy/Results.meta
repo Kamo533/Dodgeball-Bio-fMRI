@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/Dodgeball/Logs/PreStudy/Results.meta
 guid: a79b83febb22041579ce69c3752bd98b
+=======
+guid: 4557fa8d2e176404ba9f994db03724ae
+>>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/Results.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

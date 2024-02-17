@@ -1,5 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: e9b204f509d4c7a44b44185de161da1a
+=======
+<<<<<<< HEAD:Assets/Dodgeball/Logs/Analyze/Position.meta
+guid: 1b36570a58bfb4421a0403b9fe588176
+=======
+guid: e9b204f509d4c7a44b44185de161da1a
+>>>>>>> Create comparison scene:Assets/Dodgeball/Logs/Pilot.meta
+>>>>>>> Create comparison scene
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
