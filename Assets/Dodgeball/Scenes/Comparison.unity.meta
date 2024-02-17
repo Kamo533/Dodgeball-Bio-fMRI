@@ -1,13 +1,21 @@
 fileFormatVersion: 2
 <<<<<<< HEAD
+<<<<<<< HEAD
 guid: a783b48b480864aeaaae7db9370f6fc4
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/Results.meta
 guid: 0bb241a0c71a9af4286d10456b677c00
+=======
+<<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI_2024-02-27/Results.meta
+guid: 25f61884adb459241a2d47bb3c0e1eee
+>>>>>>> Create comparison scene
 folderAsset: yes
 =======
 guid: a783b48b480864aeaaae7db9370f6fc4
 >>>>>>> Create comparison scene:Assets/Dodgeball/Scenes/Comparison.unity.meta
+<<<<<<< HEAD
+>>>>>>> Create comparison scene
+=======
 >>>>>>> Create comparison scene
 DefaultImporter:
   externalObjects: {}

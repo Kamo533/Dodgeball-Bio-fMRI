@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI_2024-03-12/PlayerData.meta
 guid: cc8bc16c7d9cdf247aaef34ab0af98fc
+=======
+guid: 6ea0b7ecb2fb74fc88a86d8f2e290e67
+>>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData/clean.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
