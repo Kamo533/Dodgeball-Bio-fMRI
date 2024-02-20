@@ -1,9 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 <<<<<<< HEAD:Assets/Dodgeball/Logs/MAPOCA-Comp/Position.meta
 guid: 5aa74331f18cc4ff19877f6679315d64
 =======
 guid: 643185a0a57d549d68a629fcf4e59b0e
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/Position.meta
+=======
+guid: 5aa74331f18cc4ff19877f6679315d64
+>>>>>>> Experiment with comparison
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
