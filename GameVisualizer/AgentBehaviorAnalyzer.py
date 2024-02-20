@@ -516,7 +516,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
     print("Precision".ljust(spacing+extra_spacing), end="")
     for a in da_analyzers:
-        print(f'{round(a.calculate_precision(agent)*100, 2)} %'.ljust(spacing), end="")
+        print(f'{round(a.calculate_precision(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Faces opponent".ljust(spacing+extra_spacing), end="")
@@ -731,7 +731,7 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    # show_study_results(dates_pilot, "Purple", "/PilotStudyNew")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
 
     # ===========================================================
 
