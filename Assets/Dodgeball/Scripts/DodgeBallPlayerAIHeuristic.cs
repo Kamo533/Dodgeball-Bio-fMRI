@@ -97,7 +97,7 @@ public class DodgeBallPlayerAIHeuristic : MonoBehaviour
         if (OnlyShootIfCanSeeTarget && canCurrentlySeeTarget && m_Agent)
         {
             float randomIndex = UnityEngine.Random.Range(0f, 1f);
-            if (randomIndex > 0.95f)
+            if (randomIndex > 0.93f)
             {
                 m_Agent.ThrowTheBall();
             }
