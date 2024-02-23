@@ -443,7 +443,7 @@ public class DodgeBallGameController : MonoBehaviour
         agent.Stunned = true;
         agent.AgentRb.constraints = RigidbodyConstraints.None;
         agent.AgentRb.drag = .5f;
-        agent.AgentRb.angularDrag = 0;
+        agent.AgentRb.angularDrag = 4;
         agent.PlayStunnedVoice();
         yield return new WaitForSeconds(2f);
         if (shouldPoof)
