@@ -1,4 +1,5 @@
 import math
+import pandas as pd
 
 from GameVisualizer import PlayerData, PositionData, getLogData
 from DataAnalyser import DataAnalyzer
@@ -97,8 +98,27 @@ def get_min_and_max_for_rectangle(coordinates):
     return coord_dict
 
 
-def define_hide_zone(distance=3):
-    pass
+def counter_clockwise(A, B, C):
+    """
+    Find out if three positions are in a counter clockwise direction.
+    """
+    return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+    
+
+def lines_crossing(pos1, pos2, bush1, bush2):
+    """
+    Check if two lines are crossing, specifically the line between the agents and the line of the bush.
+    """
+    return counter_clockwise(pos1, bush1, bush2) != counter_clockwise(pos2, bush1, bush2) and counter_clockwise(pos1, pos2, bush1) != counter_clockwise(pos1, pos2, bush2)
+
+
+def close_to_bush(pos, bush, distance=3):
+    """
+    Check if agent is located within a given distance from a bush.
+    """
+    for bush_part in bush:
+        if math.dist(pos, bush_part) < distance : return True
+    return False
 
 
 
@@ -141,7 +161,6 @@ class AgentBehaviorAnalyzer:
         if agent == "Blue" : pos = (pos_entry.pos_purple_x, pos_entry.pos_purple_y)
         else : pos = (pos_entry.pos_blue_x, pos_entry.pos_blue_y)
         return pos
-
 
 
     def calculate_distance_between_agents(self, timestamp):
@@ -220,12 +239,30 @@ class AgentBehaviorAnalyzer:
         return angle_list
     
 
+    def get_instances_of_facing_opponent(self, agent="Blue", margin_degrees=15):
+        """
+        Return a list of all position instances when the agent is facing its opponent
+        """
+        def is_facing(pos, agent, margin_degrees):
+            return self.calculate_rotation_difference(pos.timestamp, agent) < margin_degrees
+        
+        def no_obstacles(pos, agent):
+            pos_agent = self.get_position(pos, agent)
+            pos_opp = self.get_opponent_position(pos, agent)
+            for bush in self.bushes:
+                bush_start, bush_end = bush[0], bush[-1]
+                if lines_crossing(pos_agent, pos_opp, bush_start, bush_end) : return False
+            return True
+
+        return list(filter(lambda pos: is_facing(pos, agent, margin_degrees) and no_obstacles(pos, agent), self.position_data.pos_list))
+    
+
     def calculate_percentage_facing_opponent(self, agent="Blue", margin_degrees=10):
         """
         Calculate the fraction of time spent facing the opponent.
         margin_degrees is how many degrees agent can be rotated away from opponent while still being considered facing the opponent.
         """
-        facing_list = list(filter(lambda pos: (self.calculate_rotation_difference(pos.timestamp, agent) < margin_degrees), self.position_data.pos_list))
+        facing_list = self.get_instances_of_facing_opponent(agent)
         return len(facing_list)/len(self.position_data.pos_list)
     
 
@@ -326,6 +363,7 @@ class AgentBehaviorAnalyzer:
         return rot_change_count/len(self.position_data.pos_list)
     
 
+
     # NOT IN USE
     def is_close_to_bush(self, timestamp, agent="Blue", distance=3):
         """
@@ -346,22 +384,13 @@ class AgentBehaviorAnalyzer:
         """
         close_list = list(filter(lambda pos: (self.is_close_to_bush(pos.timestamp, agent, distance)), self.position_data.pos_list))
         return len(close_list)/len(self.position_data.pos_list)
-    
+
+
 
     def calculate_hiding_percentage(self, agent="Blue"):
         """
         Calculate the percentage of time the agent spends hiding from the opponent behind a bush.
         """
-        def counter_clockwise(A, B, C):
-            return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
-        
-        def lines_crossing(pos1, pos2, bush1, bush2):
-            return counter_clockwise(pos1, bush1, bush2) != counter_clockwise(pos2, bush1, bush2) and counter_clockwise(pos1, pos2, bush1) != counter_clockwise(pos1, pos2, bush2)
-        
-        def close_to_bush(pos, bush, distance=3):
-            for bush_part in bush:
-                if math.dist(pos, bush_part) < distance : return True
-        
         hiding_count = 0
         for pos_entry in self.position_data.pos_list:
             pos = self.get_position(pos_entry, agent)
@@ -388,23 +417,52 @@ class AgentBehaviorAnalyzer:
         return count
     
 
-    def find_move_away_percentage(self, agent="Blue"):
+    def count_move_away(self, agent="Blue", pos_list=[]):
         """
-        Calculate the percentage of time the agent spends moving away from its opponent.
+        Count how many time intervals the agent moves away from its opponent.
         """
         move_away_count = 0
-        prev_pos_entry = self.position_data.pos_list[0]
+        prev_pos_entry = pos_list[0]
         prev_distance = self.calculate_distance_between_agents(prev_pos_entry.timestamp)
         prev_opponent_pos = self.get_opponent_position(prev_pos_entry, agent)
-        for pos_entry in self.position_data.pos_list[1:]:
+        for pos_entry in pos_list[1:]:
             pos = self.get_position(pos_entry, agent)
             new_distance = math.dist(pos, prev_opponent_pos)
             if new_distance > prev_distance:
                 move_away_count += 1
             prev_distance = self.calculate_distance_between_agents(pos_entry.timestamp)
             prev_opponent_pos = self.get_opponent_position(pos_entry, agent)
+        return move_away_count
+
+    
+    def find_move_away_percentage(self, agent="Blue"):
+        """
+        Calculate the percentage of time the agent spends moving away from its opponent.
+        """
+        move_away_count = self.count_move_away(agent, self.position_data.pos_list)
         return move_away_count/len(self.position_data.pos_list)
     
+
+    def calculate_move_away_when_facing_opponent(self, agent="Blue", margin_degrees=20):
+        """
+        Calculate the percentage of time the agent spends moving away from its opponent when it sees the opponent.
+        """
+        facing_list = self.get_instances_of_facing_opponent(agent, margin_degrees)
+        move_away_count = 0
+        prev_pos_entry = facing_list[0]
+        sub_facing_list = []
+        for pos_entry in facing_list:
+            if pos_entry.timestamp - prev_pos_entry.timestamp < pd.Timedelta(seconds=1):
+                sub_facing_list.append(pos_entry)
+            elif len(sub_facing_list) > 1:
+                move_away_count += self.count_move_away(agent, sub_facing_list)
+                sub_facing_list = []
+            else:
+                sub_facing_list = []
+            prev_pos_entry = pos_entry
+        return move_away_count/len(facing_list)
+
+
 
     def print_all_data(self):
         print("Average throw distance for Blue:", round(self.calculate_average_throw_distance("Blue"), 3))
@@ -516,7 +574,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
     print("Precision".ljust(spacing+extra_spacing), end="")
     for a in da_analyzers:
-        print(f'{round(a.calculate_precision(agent)*100, 2)} %'.ljust(spacing), end="")
+        print(f'{round(a.calculate_precision(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Faces opponent".ljust(spacing+extra_spacing), end="")
@@ -532,6 +590,11 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     print("Moves away".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Moves away facing".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_move_away_when_facing_opponent(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Is hiding".ljust(spacing+extra_spacing), end="")
@@ -566,11 +629,17 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_average_pickup_throw_time(agent), 3)} s'.ljust(spacing), end="")
     print()
 
+    print()
+
     print("Avg agent distance".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_average_distance_between_agents(), 3)}'.ljust(spacing), end="")
     print()
 
+    print("Avg game length".ljust(spacing+extra_spacing), end="")
+    for a in da_analyzers:
+        print(f'{round(a.get_average_game_length(), 3)} s'.ljust(spacing), end="")
+    print()
 
     print()
 
@@ -731,12 +800,12 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    # show_study_results(dates_pilot, "Purple", "/PilotStudyNew")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
 
     # ===========================================================
 
 
-    # ======================= Experiments =======================
+    # ======================= (Pilot) Experiments =======================
 
     dates_fmri_1 = {
         "FSM": "2024-02-13_19-19-16",
@@ -753,13 +822,25 @@ if __name__ == "__main__":
 
     # =========================================================
 
-    
+
+    # ======================= Post pilot experiments =======================
+
     dates_post_fmri = {
         "FSM": "2024-02-14_16-35-48",
         "RL": "2024-02-14_16-43-48"
     }
 
+    dates_fsm4 = {
+        "FSM 4.1": "2024-02-20_14-47-23",
+        "FSM 4.2": "2024-02-20_15-19-53",
+        "RL": "2024-02-20_14-35-25"
+    }
+
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
+
+    show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
+
+    # ======================================================================
 
     
     # Not accessible
