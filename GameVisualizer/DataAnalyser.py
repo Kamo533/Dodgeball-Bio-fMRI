@@ -217,6 +217,21 @@ class DataAnalyzer:
                     non_game_time += sequence_duration
         total_time = self.df.elapsed_time.max() - non_game_time
         return total_time / self.df['EventType'].value_counts()[player + "PickedUpBall"]
+    
+
+    def get_average_game_length(self):
+        game_time_list = []
+        sequence_start = None
+        for i, row in self.df.iterrows():
+            # Can change this to FinishCountDown
+            if row['EventType'] == 'ResetScene':
+                sequence_start = row['elapsed_time']
+            elif row['EventType'] == 'GameEnd':
+                sequence_end = row['elapsed_time']
+                if sequence_start != None:
+                    sequence_duration = sequence_end - sequence_start
+                    game_time_list.append(sequence_duration)
+        return sum(game_time_list)/len(game_time_list)
 
 
     def print_event_count(self, event='BlueThrewBall'):
