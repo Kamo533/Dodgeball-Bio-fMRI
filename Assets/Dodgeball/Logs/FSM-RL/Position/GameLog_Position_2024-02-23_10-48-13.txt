@@ -1,0 +1,1 @@
+Timestamp,(Position_Blue_X,Position_Blue_Y),Rotation_Blue,(Position_Purple_X,Position_Purple_Y),Rotation_Purple
