@@ -838,10 +838,19 @@ if __name__ == "__main__":
 
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
 
-    show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
+    # show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
 
     # ======================================================================
 
+    fsm_rl = {
+        "FSM 4": "2024-02-25_13-55-29",
+        "FSM 5": "2024-02-25_14-10-21"
+    }
+
+    show_study_results([fsm_rl], "Blue", "/FSM-RL")
+    show_study_results([fsm_rl], "Purple", "/FSM-RL")
+    
+    
     
     # Not accessible
     dates_pre_fmri = {
@@ -865,8 +874,8 @@ if __name__ == "__main__":
     # show_study_results([dates_comparison], "Blue", "/FSM-RL")
     # show_study_results([test_comparison], "Purple", "/FSM-RL")
 
-    show_study_results([fsm0_rl], "Blue", "/FSM-RL")
-    show_study_results([fsm0_rl], "Purple", "/FSM-RL")
+    # show_study_results([fsm0_rl], "Blue", "/FSM-RL")
+    # show_study_results([fsm0_rl], "Purple", "/FSM-RL")
 
     
     
