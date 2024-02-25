@@ -1,0 +1,3 @@
+Timestamp,EventType,BlueBallsLeft,PurpleBallsLeft,BlueLives,PurpleLives,Corner
+11:48:38.018,Init,0,3,3,0
+11:48:38.018,ResetScene,0,0,3,3,0

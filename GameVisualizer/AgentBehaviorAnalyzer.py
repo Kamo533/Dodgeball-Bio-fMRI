@@ -574,7 +574,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
     print()
 
-    print("On blue side".ljust(spacing+extra_spacing), end="")
+    """ print("On blue side".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
     print()
@@ -582,7 +582,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     print("On purple side".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
-    print()
+    print() """
 
     """ print("Close to bush".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
@@ -767,6 +767,25 @@ if __name__ == "__main__":
         "FSM": "2024-02-13_15-57-30",
         "RL": "2024-02-13_16-02-46"
     }
+
+    dates_comparison = {
+        "FSM-RL": "2024-02-23_12-30-10",
+        "FSM-RL 2": "2024-02-23_12-48-03",
+    }
+
+    test_comparison = {
+        "RL-RL": "2024-02-25_12-49-26",
+    }
+
+    fsm0_rl = {
+        "FSM0-RL": "2024-02-25_13-13-26"
+    }
+
+    # show_study_results([dates_comparison], "Blue", "/FSM-RL")
+    # show_study_results([test_comparison], "Purple", "/FSM-RL")
+
+    show_study_results([fsm0_rl], "Blue", "/FSM-RL")
+    show_study_results([fsm0_rl], "Purple", "/FSM-RL")
 
     
     
