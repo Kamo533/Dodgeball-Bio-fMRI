@@ -30,12 +30,7 @@ public class GameLogger : MonoBehaviour
         fileNamePlayerData = "GameLog_Player_Data_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
         fileNamePosition = "GameLog_Position_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
 
-<<<<<<< HEAD
         logsFolderName = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Dodgeball/Logs/FSM-RL"); //"Assets/Dodgeball/Logs");
-=======
-        logsFolderName = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Dodgeball/Logs/MAPOCA-Comp"); //"Assets/Dodgeball/Logs");
->>>>>>> Experiment with comparison
-
 
         string folderPath = Path.Combine(logsFolderName, "Position");
         if (!Directory.Exists(folderPath)) // Create diroctory if not exists
