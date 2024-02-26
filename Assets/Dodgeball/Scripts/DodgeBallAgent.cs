@@ -896,7 +896,7 @@ public class DodgeBallAgent : Agent
         float view_open_space_interest;
         float agent_interest;
         float agent_fear;
-        float rotation_in_movement_direction_interest;
+        float rotation_in_movement_direction;
         float previous_movement_interest;
         int n = 4;
 
@@ -910,7 +910,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.5;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1;
-                rotation_in_movement_direction_interest = (float)0.5;
+                rotation_in_movement_direction = (float)0.5;
                 previous_movement_interest = (float)0.05;
                 break;
             case 1:
@@ -921,7 +921,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.2;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
-                rotation_in_movement_direction_interest = (float)0.4;
+                rotation_in_movement_direction = (float)0.4;
                 previous_movement_interest = (float)0.5;
                 n = 20;
                 break;
@@ -933,7 +933,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.01;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 200 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? (float)0.3 : (float)0.8;
-                rotation_in_movement_direction_interest = (float)0.4;
+                rotation_in_movement_direction = (float)0.4;
                 previous_movement_interest = (float)0.9;
                 n = 20;
                 break;
@@ -945,7 +945,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.6;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - (float)0.01;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.5;
-                rotation_in_movement_direction_interest = (float)0.4;
+                rotation_in_movement_direction = (float)0.4;
                 previous_movement_interest = (float)0.1;
                 n = 20;
 
@@ -958,7 +958,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.6;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - 0.01f;
                 agent_fear = currentNumberOfBalls > 2 ? (float)0 : (float)0.5;
-                rotation_in_movement_direction_interest = 0;
+                rotation_in_movement_direction = 0;
                 previous_movement_interest = 0;
                 n = 20;
 
@@ -971,7 +971,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.1;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100 - 0.01f;
                 agent_fear = currentNumberOfBalls > 2 ? (float)0 : (float)0.2;
-                rotation_in_movement_direction_interest = 0;
+                rotation_in_movement_direction = 0;
                 previous_movement_interest = 0;
                 n = 20;
 
@@ -984,7 +984,7 @@ public class DodgeBallAgent : Agent
                 view_open_space_interest = (float)0.5;
                 agent_interest = Mathf.Exp(currentNumberOfBalls) / 100;
                 agent_fear = currentNumberOfBalls > 2 ? 0 : (float)0.1;
-                rotation_in_movement_direction_interest = (float)0.5;
+                rotation_in_movement_direction = (float)0.5;
                 previous_movement_interest = (float)0.05;
                 break;
         }
@@ -1095,7 +1095,7 @@ public class DodgeBallAgent : Agent
         }
 
 
-        rotation_angles[new_movement_angle] += rotation_in_movement_direction_interest;
+        rotation_angles[new_movement_angle] += rotation_in_movement_direction;
         float max_rotation_angle = rotation_angles.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
 
         // ROTATE AGENT

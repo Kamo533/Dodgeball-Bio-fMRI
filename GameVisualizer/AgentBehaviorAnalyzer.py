@@ -838,7 +838,7 @@ if __name__ == "__main__":
 
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
 
-    show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
+    # show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
 
     # ======================================================================
 
@@ -849,6 +849,19 @@ if __name__ == "__main__":
         "RL": "2024-02-13_16-02-46"
     }
 
+
+    elen = {
+        "FSM": "2024-02-26_12-01-15",
+        "RL": "2024-02-26_12-07-26"
+    }
+
+    sindre = {
+        "FSM": "2024-02-26_12-20-53",
+        "RL": "2024-02-26_12-15-05"
+    }
+
+    show_study_results([elen, sindre], "Purple", "/ElenTest")
+    show_study_results([elen, sindre], "Blue", "/ElenTest")
     
     
 
