@@ -587,10 +587,10 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    print("Moves away".ljust(spacing+extra_spacing), end="")
+    """ print("Moves away".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
-    print()
+    print() """
 
     print("Moves away facing".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
@@ -800,7 +800,7 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
+    show_study_results(dates_pilot, "Purple", "/PilotStudy")
 
     # ===========================================================
 
@@ -842,14 +842,56 @@ if __name__ == "__main__":
 
     # ======================================================================
 
-    fsm_rl = {
+    fsm_rl_five_balls = {
         "FSM 4": "2024-02-25_13-55-29",
         "FSM 5": "2024-02-25_14-10-21"
     }
 
-    show_study_results([fsm_rl], "Blue", "/FSM-RL")
-    show_study_results([fsm_rl], "Purple", "/FSM-RL")
+    # show_study_results([fsm_rl_five_balls], "Blue", "/FSM-RL")
+    # show_study_results([fsm_rl_five_balls], "Purple", "/FSM-RL")
+
+    fsm_rl_four_balls = {
+        "FSM 4": "2024-02-25_21-10-02",
+        "FSM 5": "2024-02-25_21-21-02"
+    }
+
+    # show_study_results([fsm_rl_four_balls], "Blue", "/FSM-RL")
+    # show_study_results([fsm_rl_four_balls], "Purple", "/FSM-RL")
     
+    five_balls = {
+        "FSM 4": "2024-02-25_21-49-40",
+        "FSM 5": "2024-02-25_21-57-06",
+        "RL": "2024-02-25_22-04-26"
+    }
+
+    # show_study_results([five_balls], "Purple", "/Analyze/FSM-4")
+
+    four_balls = {
+        "FSM 4": "2024-02-25_22-13-32",
+        "FSM 5": "2024-02-25_22-28-52",
+        "RL": "2024-02-25_22-20-20"
+    }
+
+    # show_study_results([four_balls], "Purple", "/Analyze/FSM-4")
+
+    compare_fsm_0 = {
+        "FSM 4": "2024-02-26_10-51-49",
+        "FSM 5": "2024-02-26_11-24-28",
+        "RL": "2024-02-26_10-40-19"
+    }
+
+    # show_study_results([compare_fsm_0], "Purple", "/Analyze/FSM-4")
+
+    fsm_rl_4_55 = {
+        "5.5 throw chance": "2024-02-26_13-15-44",
+    }
+
+    fsm_rl_4_7 = {
+        "7.0 throw chance": "2024-02-26_14-44-42"
+    }
+
+    # show_study_results([fsm_rl_4_7], "Blue", "/FSM-RL")
+    # show_study_results([fsm_rl_4_7], "Purple", "/FSM-RL")
     
     
     # Not accessible
