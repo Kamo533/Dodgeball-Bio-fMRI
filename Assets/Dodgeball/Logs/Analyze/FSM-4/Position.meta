@@ -1,9 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 <<<<<<< HEAD:Assets/Dodgeball/Logs/Analyze/FSM-4/Position.meta
 guid: dd3c9949e25974b65a7f0d6b13e8dccb
 =======
 guid: e9b204f509d4c7a44b44185de161da1a
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/Pilot.meta
+=======
+guid: dd3c9949e25974b65a7f0d6b13e8dccb
+>>>>>>> Compare FSM and RL
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

@@ -620,10 +620,10 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    print("Moves away".ljust(spacing+extra_spacing), end="")
+    """ print("Moves away".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
-    print()
+    print() """
 
     print("Moves towards".ljust(spacing+extra_spacing), end="")
     for a in analyzers:

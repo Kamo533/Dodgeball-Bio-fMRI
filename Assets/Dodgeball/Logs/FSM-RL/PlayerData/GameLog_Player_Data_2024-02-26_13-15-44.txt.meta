@@ -1,9 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 <<<<<<< HEAD:Assets/Dodgeball/Logs/FSM-RL/PlayerData/GameLog_Player_Data_2024-02-26_13-15-44.txt.meta
 guid: b94fd57c5eac84aa6a909effa813b938
 =======
 guid: 24b6a2437026b45ac847e3b82459767b
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData/clean/GameLog_Player_Data_2024-02-11_22-03-24.txt.meta
+=======
+guid: b94fd57c5eac84aa6a909effa813b938
+>>>>>>> Compare FSM and RL
 TextScriptImporter:
   externalObjects: {}
   userData: 
