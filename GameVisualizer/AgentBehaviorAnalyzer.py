@@ -1,5 +1,6 @@
 import math
 import pandas as pd
+import csv
 
 from GameVisualizer import PlayerData, PositionData, getLogData
 from DataAnalyser import DataAnalyzer
@@ -417,72 +418,68 @@ class AgentBehaviorAnalyzer:
         return count
     
 
-    def count_move_away(self, agent="Blue", pos_list=[]):
+    def count_move(self, agent="Blue", pos_list=[], move_away=True):
         """
-        Count how many time intervals the agent moves away from its opponent.
+        Count how many time intervals the agent moves away from or moves towards its opponent.
         """
-        move_away_count = 0
+        move_count = 0
         prev_pos_entry = pos_list[0]
         prev_distance = self.calculate_distance_between_agents(prev_pos_entry.timestamp)
         prev_opponent_pos = self.get_opponent_position(prev_pos_entry, agent)
         for pos_entry in pos_list[1:]:
             pos = self.get_position(pos_entry, agent)
             new_distance = math.dist(pos, prev_opponent_pos)
-            if new_distance > prev_distance:
-                move_away_count += 1
+            if move_away:
+                if new_distance > prev_distance:
+                    move_count += 1
+            else:
+                if new_distance < prev_distance:
+                    move_count += 1
             prev_distance = self.calculate_distance_between_agents(pos_entry.timestamp)
             prev_opponent_pos = self.get_opponent_position(pos_entry, agent)
-        return move_away_count
+        return move_count
 
     
     def find_move_away_percentage(self, agent="Blue"):
         """
         Calculate the percentage of time the agent spends moving away from its opponent.
         """
-        move_away_count = self.count_move_away(agent, self.position_data.pos_list)
+        move_away_count = self.count_move(agent, self.position_data.pos_list)
         return move_away_count/len(self.position_data.pos_list)
     
 
-    def calculate_move_away_when_facing_opponent(self, agent="Blue", margin_degrees=20):
+    def calculate_move_when_facing_opponent(self, agent="Blue", margin_degrees=20, move_away=True):
         """
-        Calculate the percentage of time the agent spends moving away from its opponent when it sees the opponent.
+        Calculate the percentage of time the agent spends moving away from or moving towards its opponent when it sees the opponent.
         """
         facing_list = self.get_instances_of_facing_opponent(agent, margin_degrees)
-        move_away_count = 0
+        move_count = 0
         prev_pos_entry = facing_list[0]
         sub_facing_list = []
         for pos_entry in facing_list:
             if pos_entry.timestamp - prev_pos_entry.timestamp < pd.Timedelta(seconds=1):
                 sub_facing_list.append(pos_entry)
             elif len(sub_facing_list) > 1:
-                move_away_count += self.count_move_away(agent, sub_facing_list)
+                move_count += self.count_move(agent, sub_facing_list, move_away=move_away)
                 sub_facing_list = []
             else:
                 sub_facing_list = []
             prev_pos_entry = pos_entry
-        return move_away_count/len(facing_list)
+        return move_count/len(facing_list)
 
 
 
     def print_all_data(self):
         print("Average throw distance for Blue:", round(self.calculate_average_throw_distance("Blue"), 3))
         print("Average throw distance for Purple:", round(self.calculate_average_throw_distance("Purple"), 3))
-        
         print()
-
         print("Average throw angle for Blue:", round(self.calculate_average_throw_angle("Blue"), 3))
         print("Average throw angle for Purple:", round(self.calculate_average_throw_angle("Purple"), 3))
-        
-        # print(ba.calculate_angle_when_hit("Purple"))
-        # print(ba.calculate_angle_when_hit("Blue"))
-
         print()
-        
         print("Percentage of time Blue faces opponent:", round(self.calculate_percentage_facing_opponent("Blue")*100, 3), "%")
         print("Percentage of time Purple faces opponent:", round(self.calculate_percentage_facing_opponent("Purple")*100, 3), "%")
-
         print()
-        
+
         print("Blue starts in zone:", self.find_start_zone("Blue"))
         print("Percentage of time Blue spends in each zone:")
         for key in self.calculate_zone_percentage("Blue").keys():
@@ -492,21 +489,14 @@ class AgentBehaviorAnalyzer:
         print("Percentage of time Purple spends in each zone:")
         for key in self.calculate_zone_percentage("Purple").keys():
             print(key, ":", round(self.calculate_zone_percentage("Purple")[key]*100, 3), "%")
-
         print()
-        
+
         print("Average time from ball pickup to throw for Blue:", round(self.calculate_average_pickup_throw_time("Blue"), 3), "s")
         print("Average time from ball pickup to throw for Purple:", round(self.calculate_average_pickup_throw_time("Purple"), 3), "s")
-
         print()
-
         print("Percentage of time Blue changes rotation direction:", round(self.calculate_rotation_change_percentage("Blue")*100, 3), "%")
         print("Percentage of time Purple changes rotation direction:", round(self.calculate_rotation_change_percentage("Purple")*100, 3), "%")
-
         print()
-
-        # print("Percentage of time Blue is close to a bush:", round(self.calculate_bush_closeness_percentage("Blue", 3)*100, 3), "%")
-        # print("Percentage of time Purple is close to a bush:", round(self.calculate_bush_closeness_percentage("Purple")*100, 3), "%")
 
 
 
@@ -594,7 +584,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
     print("Moves away facing".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
-        print(f'{round(a.calculate_move_away_when_facing_opponent(agent)*100, 3)} %'.ljust(spacing), end="")
+        print(f'{round(a.calculate_move_when_facing_opponent(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Is hiding".ljust(spacing+extra_spacing), end="")
@@ -657,6 +647,91 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
     for a in analyzers:
         print(f'{round(a.calculate_bush_closeness_percentage(agent, 3)*100, 3)} %'.ljust(spacing), end="")
     print() """
+
+
+def generate_statistics_dict(date_list=[{}], subfolder=""):
+    statistics_dict = []
+    labels = list(date_list[0].keys())
+
+    def add_statistics(user_dict={}, agent="Purple", agent_marker="", labels=[]):
+        if agent == "Blue" : opponent = "Purple"
+        else : opponent = "Blue"
+
+        j = 0
+        for a in analyzers:
+            win_ratio = a.count_wins(agent) / (a.count_wins(agent) + a.count_wins(opponent))
+            user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
+            user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
+            user_dict["Rotation change " + labels[j] + agent_marker] = round(a.calculate_rotation_change_percentage(agent)*100, 3)
+            user_dict["Aggressive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent, move_away=False)*100, 3)
+            user_dict["Defensive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent)*100, 3)
+            user_dict["Hiding " + labels[j] + agent_marker] = round(a.calculate_hiding_percentage(agent)*100, 3)
+            user_dict["Throw distance " + labels[j] + agent_marker] = round(a.calculate_average_throw_distance(agent), 3)
+            user_dict["Throw angle " + labels[j] + agent_marker] = round(a.calculate_average_throw_angle(agent), 3)
+            user_dict["Throw time " + labels[j] + agent_marker] = round(a.calculate_average_pickup_throw_time(agent), 3)
+            user_dict["Agent distance " + labels[j]] = round(a.calculate_average_distance_between_agents(), 3)
+            j += 1
+        
+        j = 0
+        for a in da_analyzers:
+            hit_ratio = a.count_event_occurences("Hit" + opponent)/(a.count_event_occurences("Hit" + agent) + a.count_event_occurences("Hit" + opponent))
+            user_dict["Hit ratio " + labels[j] + agent_marker] = round(hit_ratio*100, 3)
+            user_dict["Precision " + labels[j] + agent_marker] = round(a.calculate_precision(agent)*100, 3)
+            user_dict["Ball hold " + labels[j] + agent_marker] = round(a.calculate_average_ball_hold(agent), 3)
+            user_dict["Pick-up time " + labels[j] + agent_marker] = round(a.calculate_time_between_pickup(agent), 3)
+            user_dict["Game duration " + labels[j]] = round(a.get_average_game_length(), 3)
+            j += 1
+        
+        return user_dict
+    
+    def generate_fields(measure="", fields=[]):
+        for agent in labels:
+            fields.append(measure + " " + agent + " (agent)")
+        for agent in labels:
+            fields.append(measure + " " + agent + " (user)")
+        return fields
+    
+    i = 1
+    for dates in date_list:
+        user_dict = {}
+        analyzers, da_analyzers = prepare_comparison(dates, subfolder)
+        user_dict["User"] = i
+        add_statistics(user_dict, "Purple", " (agent)", labels)
+        add_statistics(user_dict, "Blue", " (user)", labels)
+        statistics_dict.append(user_dict)
+        i += 1
+    
+    fields = ["User"]
+    generate_fields("Win ratio", fields)
+    generate_fields("Hit ratio", fields)
+    generate_fields("Precision", fields)
+    generate_fields("Pick-up time", fields)
+    generate_fields("Throw time", fields)
+    generate_fields("Ball hold", fields)
+    generate_fields("Throw distance", fields)
+    generate_fields("Throw angle", fields)
+    generate_fields("Rotation change", fields)
+    generate_fields("Opponent observation", fields)
+    generate_fields("Aggressive movements", fields)
+    generate_fields("Defensive movements", fields)
+    generate_fields("Hiding", fields)
+    for agent in labels:
+        fields.append("Agent distance " + agent)
+        fields.append("Game duration " + agent)
+
+    return fields, statistics_dict
+
+
+def write_to_csv(filename, fields, statistics_dict):
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(statistics_dict)
+
+
+def create_csv_file(filename, date_list=[{}], subfolder=""):
+    fields, statistics_dict = generate_statistics_dict(date_list, subfolder)
+    write_to_csv(filename, fields, statistics_dict)
 
 
 def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[], agent="Blue"):
@@ -723,7 +798,7 @@ def print_divider():
     print("\n")
 
 
-def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
+def prepare_comparison(dates={}, subfolder=""):
     analyzers = []
     da_analyzers = []
     for game in dates.keys():
@@ -732,6 +807,11 @@ def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
         da_analyzer = add_data_analyzer(dates[game], subfolder)
         analyzers.append(analyzer)
         da_analyzers.append(da_analyzer)
+    return analyzers, da_analyzers
+
+
+def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
+    analyzers, da_analyzers = prepare_comparison(dates, subfolder)
     print_divider()
     compare(analyzers, da_analyzers, dates.keys(), agent)
 
@@ -765,6 +845,7 @@ if __name__ == "__main__":
 
     # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
+    # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy")
 
     # ===========================================================
 
@@ -800,7 +881,8 @@ if __name__ == "__main__":
     }
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
-    show_study_results(dates_pilot, "Purple", "/PilotStudy")
+    # show_study_results(dates_pilot, "Purple", "/PilotStudy")
+    create_csv_file("pilot_study.csv", dates_pilot, "/PilotStudy")
 
     # ===========================================================
 
