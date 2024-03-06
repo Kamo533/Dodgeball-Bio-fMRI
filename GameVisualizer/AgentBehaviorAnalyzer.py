@@ -814,6 +814,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
             user_dict["Throw distance " + labels[j] + agent_marker] = round(a.calculate_average_throw_distance(agent), 3)
             user_dict["Throw angle " + labels[j] + agent_marker] = round(a.calculate_average_throw_angle(agent), 3)
             user_dict["Throw time " + labels[j] + agent_marker] = round(a.calculate_average_pickup_throw_time(agent), 3)
+            user_dict["Court half favor " + labels[j] + agent_marker] = round(a.find_court_half_favor(agent)*100, 3)
+            user_dict["Middle court favor " + labels[j] + agent_marker] = round(a.find_middle_court_favor(agent)*100, 3)
             user_dict["Agent distance " + labels[j]] = round(a.calculate_average_distance_between_agents(), 3)
             j += 1
         
@@ -860,6 +862,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Aggressive movements", fields)
     generate_fields("Defensive movements", fields)
     generate_fields("Hiding", fields)
+    generate_fields("Court half favor", fields)
+    generate_fields("Middle court favor", fields)
     for agent in labels:
         fields.append("Agent distance " + agent)
         fields.append("Game duration " + agent)
