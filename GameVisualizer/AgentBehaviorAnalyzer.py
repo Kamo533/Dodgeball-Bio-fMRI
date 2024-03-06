@@ -132,7 +132,9 @@ class AgentBehaviorAnalyzer:
         self.results_data = getLogData("Results", date, subfolder)
         if fsm : y_delta = 0
         else : y_delta = 34
-        self.zones = define_zones(define_corners(y_delta=y_delta, margin=0.5), 1,2)
+        self.zone_number_x = 3
+        self.zone_number_y = 4
+        self.zones = define_zones(define_corners(y_delta=y_delta, margin=0.5), self.zone_number_x, self.zone_number_y)
         self.bushes = define_bushes(y_delta=y_delta)
 
 
@@ -306,6 +308,39 @@ class AgentBehaviorAnalyzer:
         """
         timestamp = self.position_data.pos_list[0].timestamp
         return self.find_agent_zone(timestamp, agent)
+    
+
+    def find_court_half_favor(self, agent="Blue"):
+        """
+        Return the percentage of time the agent spends in the same court half as it started in
+        """
+        zone_percentage = self.calculate_zone_percentage(agent)
+        start_zone = self.find_start_zone(agent)
+        half = self.zone_number_y // 2
+        total_percentage = 0
+        for zone in zone_percentage.keys():
+            if start_zone[0] < half and zone[0] < half:
+                total_percentage += zone_percentage[zone]
+            elif self.zone_number_y % 2 == 0 and start_zone[0] >= half and zone[0] >= half:
+                total_percentage += zone_percentage[zone]
+            elif self.zone_number_y % 2 != 0 and start_zone[0] > half and zone[0] > half:
+                total_percentage += zone_percentage[zone]
+        return total_percentage
+
+
+    def find_middle_court_favor(self, agent="Blue"):
+        """
+        Return the percentage of time the agent spends in the middle part of the court
+        """
+        zone_percentage = self.calculate_zone_percentage(agent)
+        half = self.zone_number_x // 2
+        total_percentage = 0
+        for zone in zone_percentage.keys():
+            if self.zone_number_x % 2 != 0 and zone[1] == half:
+                total_percentage += zone_percentage[zone]
+            elif self.zone_number_x % 2 == 0 and (zone[1] == half or zone[1] == half - 1):
+                total_percentage += zone_percentage[zone]
+        return total_percentage
     
 
     def calculate_average_pickup_throw_time(self, agent="Blue"):
@@ -633,20 +668,16 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
     print()
 
-    """ print("On blue side".ljust(spacing+extra_spacing), end="")
+    print("Court half favor".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(1,0)]*100, 3)} %'.ljust(spacing), end="")
+        print(f'{round(a.find_court_half_favor(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    print("On purple side".ljust(spacing+extra_spacing), end="")
+    print("Middle court favor".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
-        print(f'{round(a.calculate_zone_percentage(agent)[(0,0)]*100, 3)} %'.ljust(spacing), end="")
-    print() """
+        print(f'{round(a.find_middle_court_favor(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
 
-    """ print("Close to bush".ljust(spacing+extra_spacing), end="")
-    for a in analyzers:
-        print(f'{round(a.calculate_bush_closeness_percentage(agent, 3)*100, 3)} %'.ljust(spacing), end="")
-    print() """
 
 
 def generate_statistics_dict(date_list=[{}], subfolder=""):
@@ -669,6 +700,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
             user_dict["Throw distance " + labels[j] + agent_marker] = round(a.calculate_average_throw_distance(agent), 3)
             user_dict["Throw angle " + labels[j] + agent_marker] = round(a.calculate_average_throw_angle(agent), 3)
             user_dict["Throw time " + labels[j] + agent_marker] = round(a.calculate_average_pickup_throw_time(agent), 3)
+            user_dict["Court half favor " + labels[j] + agent_marker] = round(a.find_court_half_favor(agent)*100, 3)
+            user_dict["Middle court favor " + labels[j] + agent_marker] = round(a.find_middle_court_favor(agent)*100, 3)
             user_dict["Agent distance " + labels[j]] = round(a.calculate_average_distance_between_agents(), 3)
             j += 1
         
@@ -715,6 +748,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Aggressive movements", fields)
     generate_fields("Defensive movements", fields)
     generate_fields("Hiding", fields)
+    generate_fields("Court half favor", fields)
+    generate_fields("Middle court favor", fields)
     for agent in labels:
         fields.append("Agent distance " + agent)
         fields.append("Game duration " + agent)
@@ -845,7 +880,7 @@ if __name__ == "__main__":
 
     # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
-    # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy")
+    create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy")
 
     # ===========================================================
 
@@ -901,6 +936,7 @@ if __name__ == "__main__":
 
     # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
     # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
+    create_csv_file("pilot_fmri.csv", [dates_fmri_1, dates_fmri_2], "/fMRI")
 
     # =========================================================
 
@@ -919,7 +955,6 @@ if __name__ == "__main__":
     }
 
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
-
     # show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
 
     # ======================================================================
