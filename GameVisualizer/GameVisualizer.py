@@ -7,12 +7,11 @@ from math import cos, sin, pi
 import time
 
 
-# Assets\Dodgeball\Logs\PlayerData\GameLog_Player_Data_2024-01-25_16-10-52.txt
+
 # year-month-day_hour-minutes-seconds : "yyyy-MM-dd_HH-mm-ss"
-date = "2024-02-13_19-05-14"  # time to plot #  2023-11-09_17-40-48
-game_type = "neat" # neat or fsm ...
+date = "2024-03-05_20-12-41"  # time to plot
+show_all_games = True # bool
 game_num = 2 # won't matter if show_all_games = True
-show_all_games = True
 
 timestamp_format = "%H:%M:%S.%f"
 
@@ -22,7 +21,7 @@ def getLogData(name, date=date, subfolder="") -> str:
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs" + subfolder
+    log_path = "Assets/Dodgeball/Logs/fMRI_2024-03-05" + subfolder
 
     part_path = ""
     if name == "PlayerData":
@@ -150,7 +149,7 @@ def colorFader(c1,c2,mix=0): #fade (linear interpolate) from color c1 (at mix=0)
     return mpl.colors.to_hex((1-mix)*c1 + mix*c2)
 
 
-def drawBoard(fig, ax):
+def drawBoard(fig, ax, start_pos_purple_y):
     corners = [(8.9, -20), (34.9, -20), (34.9, -73.9), (8.9, -73.6)] 
     bushes = [
         [(18.8, -64.5), (17.7, -64.5), (16.6, -64.5), (15.5, -64.5), (14.4, -64.5), (13.3, -64.5)],
@@ -165,13 +164,12 @@ def drawBoard(fig, ax):
 
     x_delta = 0
     y_delta = 0
-    if game_type == "neat":
+    if start_pos_purple_y > (corners[0][-1] + corners[-1][-1])/2:
         y_delta = 34
+        print("Game on NEAT or NN board")
+    else:
+        print("Game on FSM or rule based board")
 
-
-    #print(f"Bushes (num={len(bushes)}): {sorted(bushes, key=lambda x : x[1])}")
-        
-    #print(f"Bushes (num={len(bushes)}): {sorted(bushes, key=lambda x : x[1])}")
 
     boarder_and_bush_color = "#78B16A"
 
@@ -344,7 +342,10 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
     fig, ax = plt.subplots()
     fig.subplots_adjust(bottom=0.25, left=0.45)
 
-    drawBoard(fig, ax)
+    game_pos_data_all = pos_data.getGamePos(start_time, end_time)
+    game_pos_data_past = [game_pos_data_all[0]]
+
+    drawBoard(fig, ax, game_pos_data_all[0].pos_purple_y)
 
     # Slider to adjust the shown positions (dependent on the time) 
     ax_time = fig.add_axes([0.25, 0.1, 0.65, 0.03])
@@ -355,9 +356,6 @@ def showFullRunWithSliderTime(pos_data: PositionData, player_data: PlayerData, g
         valmax=duration,
         valinit=0
     )
-
-    game_pos_data_all = pos_data.getGamePos(start_time, end_time)
-    game_pos_data_past = [game_pos_data_all[0]]
 
     blue_data_all = pos_data.positionList(True, game_pos_data_all)
     purple_data_all = pos_data.positionList(False, game_pos_data_all)
