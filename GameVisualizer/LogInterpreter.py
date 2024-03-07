@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+import os
 
 
 timestamp_format = "%H:%M:%S.%f"
+date_format = "%Y-%m-%d_%H-%M-%S"
 
 
 def getLogData(name, date, subfolder="") -> str:
@@ -9,7 +11,7 @@ def getLogData(name, date, subfolder="") -> str:
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs/fMRI_2024-03-05" + subfolder
+    log_path = "Assets/Dodgeball/Logs/fMRI_" + date.split("_")[0] + subfolder
 
     part_path = ""
     if name == "PlayerData":
@@ -22,6 +24,43 @@ def getLogData(name, date, subfolder="") -> str:
     data = f.read()
     f.close()
     return data
+
+def exploreFolder(path : str):
+    """
+    Explore a folder and all subfolders. Ignores .meta files.
+ 
+    Parameters
+    path : str
+        the path to the folder to be explored
+ 
+    Returns
+    list
+        path to all files under the folder at path
+    """
+    pot_folders = os.listdir(path)
+
+    file_list = []
+
+    for element in pot_folders:
+        if ".meta" in element:
+            continue
+
+        new_element = path + "//" + element
+        if "." in element:
+            file_list.append(new_element)
+        else:
+            file_list.extend(exploreFolder(new_element))
+    
+    return file_list
+
+def getUniqueDates(files_list : list):
+    file_end_format = date_format + ".txt"
+    dates = set()
+
+    for file_path in files_list:
+        dates.add(datetime.strptime(file_path[-23:], file_end_format))
+
+    return dates
 
 
 class PositionData:
@@ -130,3 +169,35 @@ class PlayerData:
         # return reset_scene_list[game_num].timestamp, reset_scene_list[game_num+1].timestamp
         return reset_scene_list[game_num].timestamp, end_game_list[game_num].timestamp + timedelta(0, 0.2)
 
+class GameData:
+    def __init__(self, date) -> None:
+        self.pos_data = PositionData(getLogData("Position", date))
+        self.player_data = PlayerData(getLogData("PlayerData", date))
+        self.game_type = "RL" if self.pos_data.pos_list[0].pos_purple_y > -47 else "RuleBased"
+        self.date = date
+
+    def __str__(self) -> str:
+        return f"GameData({self.date}, type:{self.game_type}, num games:{self.player_data.numGames()})"
+
+class GameDataContainer:
+    def __init__(self, log_folders : list, unused_dates : list = []) -> None:
+        # self.games = []
+
+        files = []
+        for folder in log_folders:
+            files.extend(exploreFolder(folder))
+        
+        # dates = getUniqueDates(files)
+
+        self.games = [GameData(date.strftime(date_format)) for date in getUniqueDates(files)]
+        self.cleanGames(unused_dates)
+        self.sortGames()
+
+    def sortGames(self) -> None:
+        self.games = sorted(self.games, key=lambda game_data : game_data.date)
+
+    def cleanGames(self, unused_dates : list = []) -> None:
+        self.games = list(filter(lambda game: game.player_data.numGames() > 0 and game.date not in unused_dates, self.games))
+
+    def __str__(self) -> str:
+        return f"GameDataContainer({[str(game) for game in self.games]})"
