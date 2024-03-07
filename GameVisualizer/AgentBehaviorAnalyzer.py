@@ -1,7 +1,7 @@
 import math
 import pandas as pd
 
-from GameVisualizer import PlayerData, PositionData, getLogData
+from LogInterpreter import PlayerData, PositionData, getLogData
 from DataAnalyser import DataAnalyzer
 
 
