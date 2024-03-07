@@ -151,6 +151,9 @@ class PlayerData:
         
         def isEndGameEvent(self) -> bool:
             return self.event_type == "GameEnd"
+        
+        def __str__(self) -> str:
+            return f"Event({self.event_type}, {self.timestamp.strftime(timestamp_format)})"
 
     def numGames(self) -> int:
         return len(list(filter(lambda event: event.isResetSceneEvent(), self.event_list))) -2
@@ -168,6 +171,9 @@ class PlayerData:
 
         # return reset_scene_list[game_num].timestamp, reset_scene_list[game_num+1].timestamp
         return reset_scene_list[game_num].timestamp, end_game_list[game_num].timestamp + timedelta(0, 0.2)
+    
+    def filterByEventType(self, type : str):
+        return list(filter(lambda event : type in event.event_type, self.event_list))
 
 class GameData:
     def __init__(self, date) -> None:
@@ -175,6 +181,17 @@ class GameData:
         self.player_data = PlayerData(getLogData("PlayerData", date))
         self.game_type = "RL" if self.pos_data.pos_list[0].pos_purple_y > -47 else "RuleBased"
         self.date = date
+    
+    def getEventPos(self, event_timestamp : datetime):
+        closest_pos = None
+
+        for pos in self.pos_data.pos_list:
+            # check if new pos has a timestap closer to event_timestamp
+            if closest_pos == None or (abs((event_timestamp-pos.timestamp).total_seconds()) < abs((event_timestamp-closest_pos.timestamp).total_seconds())):
+                closest_pos = pos
+
+        return closest_pos
+
 
     def __str__(self) -> str:
         return f"GameData({self.date}, type:{self.game_type}, num games:{self.player_data.numGames()})"
@@ -190,6 +207,7 @@ class GameDataContainer:
         # dates = getUniqueDates(files)
 
         self.games = [GameData(date.strftime(date_format)) for date in getUniqueDates(files)]
+
         self.cleanGames(unused_dates)
         self.sortGames()
 
