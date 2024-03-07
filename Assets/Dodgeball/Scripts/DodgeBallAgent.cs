@@ -1000,11 +1000,6 @@ public class DodgeBallAgent : Agent
             movement_angles[angle] = (float)0;
             rotation_angles[angle] = (float)0;
         }
-        // foreach (float angle in back_spec.Angles)
-        // {
-        //     movement_angles[angle] = (float)0;
-        //     rotation_angles[angle] = (float)0;
-        // }
 
 
         // NEW MOVEMENT AND ROTATION DIRECTION
@@ -1054,9 +1049,7 @@ public class DodgeBallAgent : Agent
             movement_angles[ball_spec.Angles[i]] += ball_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - ball_obs.RayOutputs[i].HitFraction) / max_length * ball_interest : 0; // If HitTagIndex == 1 then the ball is available to be picked up
 
             // If observe wall/bush
-            // movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest; // TODO give random score based on HitFraction and learn to se different on bush, wall and something
             movement_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? (max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest : wall_obs.RayOutputs[i].HitFraction / max_length * open_space_interest(wall_obs.RayOutputs[i].HitFraction);
-            //rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitTagIndex == 1 ? -(max_length - wall_obs.RayOutputs[i].HitFraction) / max_length * bush_interest / 3 : 0;
             rotation_angles[wall_spec.Angles[i]] += wall_obs.RayOutputs[i].HitFraction * view_open_space_interest / max_length;
 
             // Prefer continue in same direction
@@ -1105,7 +1098,7 @@ public class DodgeBallAgent : Agent
         // MOVE AGENT
         double z_delta = Math.Sin((new_movement_angle) * Math.PI / 180);
         double x_delta = Math.Cos((new_movement_angle) * Math.PI / 180);
-        float eagerness = movement_angles[new_movement_angle] / 2 > 1 ? agentSpeed : (agentSpeed * 2 / 3) * (movement_angles[new_movement_angle] / 2) + agentSpeed / 3; // * 2 / 3;
+        float eagerness = movement_angles[new_movement_angle] / 2 > 1 ? agentSpeed : (agentSpeed * 2 / 3) * (movement_angles[new_movement_angle] / 2) + agentSpeed / 3;
         var moveDir = transform.TransformDirection(new Vector3((float)x_delta * eagerness, 0, (float)z_delta * eagerness));
         m_CubeMovement.RunOnGround(moveDir);
     }
