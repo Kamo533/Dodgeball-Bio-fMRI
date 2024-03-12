@@ -620,10 +620,15 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    """ print("Moves away".ljust(spacing+extra_spacing), end="")
+    print("Moves away".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
-    print() """
+    print()
+
+    print("Moves towards".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.find_move_towards_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
 
     print("Moves towards".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
@@ -794,7 +799,7 @@ def create_csv_file(filename, date_list=[{}], subfolder="", both_players=True):
     write_to_csv(filename, fields, statistics_dict)
 
 
-def generate_statistics_dict(date_list=[{}], subfolder=""):
+def generate_statistics_dict(date_list=[{}], subfolder="", both_players=True):
     statistics_dict = []
     labels = list(date_list[0].keys())
 
@@ -808,6 +813,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
             user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
             user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
             user_dict["Rotation change " + labels[j] + agent_marker] = round(a.calculate_rotation_change_percentage(agent)*100, 3)
+            user_dict["Retreat " + labels[j] + agent_marker] = round(a.find_move_away_percentage(agent)*100, 3)
+            user_dict["Approach " + labels[j] + agent_marker] = round(a.find_move_towards_percentage(agent)*100, 3)
             user_dict["Aggressive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent, move_away=False)*100, 3)
             user_dict["Defensive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent)*100, 3)
             user_dict["Hiding " + labels[j] + agent_marker] = round(a.calculate_hiding_percentage(agent)*100, 3)
@@ -834,8 +841,9 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     def generate_fields(measure="", fields=[]):
         for agent in labels:
             fields.append(measure + " " + agent + " (agent)")
-        for agent in labels:
-            fields.append(measure + " " + agent + " (user)")
+        if both_players:
+            for agent in labels:
+                fields.append(measure + " " + agent + " (user)")
         return fields
     
     i = 1
@@ -844,7 +852,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
         analyzers, da_analyzers = prepare_comparison(dates, subfolder)
         user_dict["User"] = i
         add_statistics(user_dict, "Purple", " (agent)", labels)
-        add_statistics(user_dict, "Blue", " (user)", labels)
+        if both_players:
+            add_statistics(user_dict, "Blue", " (user)", labels)
         statistics_dict.append(user_dict)
         i += 1
     
@@ -859,6 +868,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Throw angle", fields)
     generate_fields("Rotation change", fields)
     generate_fields("Opponent observation", fields)
+    generate_fields("Retreat", fields)
+    generate_fields("Approach", fields)
     generate_fields("Aggressive movements", fields)
     generate_fields("Defensive movements", fields)
     generate_fields("Hiding", fields)
@@ -866,6 +877,7 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Middle court favor", fields)
     for agent in labels:
         fields.append("Agent distance " + agent)
+    for agent in labels:
         fields.append("Game duration " + agent)
 
     return fields, statistics_dict
@@ -878,8 +890,8 @@ def write_to_csv(filename, fields, statistics_dict):
         writer.writerows(statistics_dict)
 
 
-def create_csv_file(filename, date_list=[{}], subfolder=""):
-    fields, statistics_dict = generate_statistics_dict(date_list, subfolder)
+def create_csv_file(filename, date_list=[{}], subfolder="", both_players=True):
+    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, both_players)
     write_to_csv(filename, fields, statistics_dict)
 
 
