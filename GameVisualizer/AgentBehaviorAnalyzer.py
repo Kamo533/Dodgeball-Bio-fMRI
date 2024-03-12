@@ -483,6 +483,14 @@ class AgentBehaviorAnalyzer:
         return move_away_count/len(self.position_data.pos_list)
     
 
+    def find_move_towards_percentage(self, agent="Blue"):
+        """
+        Calculate the percentage of time the agent spends moving away from its opponent.
+        """
+        move_away_count = self.count_move(agent, self.position_data.pos_list, move_away=False)
+        return move_away_count/len(self.position_data.pos_list)
+    
+
     def calculate_move_when_facing_opponent(self, agent="Blue", margin_degrees=20, move_away=True):
         """
         Calculate the percentage of time the agent spends moving away from or moving towards its opponent when it sees the opponent.
@@ -612,14 +620,24 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
         print(f'{round(a.calculate_rotation_change_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
     print()
 
-    """ print("Moves away".ljust(spacing+extra_spacing), end="")
+    print("Moves away".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.find_move_away_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
-    print() """
+    print()
+
+    print("Moves towards".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.find_move_towards_percentage(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
 
     print("Moves away facing".ljust(spacing+extra_spacing), end="")
     for a in analyzers:
         print(f'{round(a.calculate_move_when_facing_opponent(agent)*100, 3)} %'.ljust(spacing), end="")
+    print()
+
+    print("Moves towards facing".ljust(spacing+extra_spacing), end="")
+    for a in analyzers:
+        print(f'{round(a.calculate_move_when_facing_opponent(agent, move_away=False)*100, 3)} %'.ljust(spacing), end="")
     print()
 
     print("Is hiding".ljust(spacing+extra_spacing), end="")
@@ -680,7 +698,7 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
 
 
-def generate_statistics_dict(date_list=[{}], subfolder=""):
+def generate_statistics_dict(date_list=[{}], subfolder="", both_players=True):
     statistics_dict = []
     labels = list(date_list[0].keys())
 
@@ -694,6 +712,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
             user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
             user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
             user_dict["Rotation change " + labels[j] + agent_marker] = round(a.calculate_rotation_change_percentage(agent)*100, 3)
+            user_dict["Retreat " + labels[j] + agent_marker] = round(a.find_move_away_percentage(agent)*100, 3)
+            user_dict["Approach " + labels[j] + agent_marker] = round(a.find_move_towards_percentage(agent)*100, 3)
             user_dict["Aggressive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent, move_away=False)*100, 3)
             user_dict["Defensive movements " + labels[j] + agent_marker] = round(a.calculate_move_when_facing_opponent(agent)*100, 3)
             user_dict["Hiding " + labels[j] + agent_marker] = round(a.calculate_hiding_percentage(agent)*100, 3)
@@ -720,8 +740,9 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     def generate_fields(measure="", fields=[]):
         for agent in labels:
             fields.append(measure + " " + agent + " (agent)")
-        for agent in labels:
-            fields.append(measure + " " + agent + " (user)")
+        if both_players:
+            for agent in labels:
+                fields.append(measure + " " + agent + " (user)")
         return fields
     
     i = 1
@@ -730,7 +751,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
         analyzers, da_analyzers = prepare_comparison(dates, subfolder)
         user_dict["User"] = i
         add_statistics(user_dict, "Purple", " (agent)", labels)
-        add_statistics(user_dict, "Blue", " (user)", labels)
+        if both_players:
+            add_statistics(user_dict, "Blue", " (user)", labels)
         statistics_dict.append(user_dict)
         i += 1
     
@@ -745,6 +767,8 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Throw angle", fields)
     generate_fields("Rotation change", fields)
     generate_fields("Opponent observation", fields)
+    generate_fields("Retreat", fields)
+    generate_fields("Approach", fields)
     generate_fields("Aggressive movements", fields)
     generate_fields("Defensive movements", fields)
     generate_fields("Hiding", fields)
@@ -752,6 +776,7 @@ def generate_statistics_dict(date_list=[{}], subfolder=""):
     generate_fields("Middle court favor", fields)
     for agent in labels:
         fields.append("Agent distance " + agent)
+    for agent in labels:
         fields.append("Game duration " + agent)
 
     return fields, statistics_dict
@@ -764,8 +789,8 @@ def write_to_csv(filename, fields, statistics_dict):
         writer.writerows(statistics_dict)
 
 
-def create_csv_file(filename, date_list=[{}], subfolder=""):
-    fields, statistics_dict = generate_statistics_dict(date_list, subfolder)
+def create_csv_file(filename, date_list=[{}], subfolder="", both_players=True):
+    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, both_players)
     write_to_csv(filename, fields, statistics_dict)
 
 
@@ -837,7 +862,7 @@ def prepare_comparison(dates={}, subfolder=""):
     analyzers = []
     da_analyzers = []
     for game in dates.keys():
-        if "FSM" in game: analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=True)
+        if "fsm" in game.lower(): analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=True)
         else : analyzer = AgentBehaviorAnalyzer(dates[game], subfolder)
         da_analyzer = add_data_analyzer(dates[game], subfolder)
         analyzers.append(analyzer)
@@ -878,9 +903,9 @@ if __name__ == "__main__":
         "FSM-V0": FSM0_date,
     }
 
-    # show_study_results([dates_pre_study], "Purple", "/PreStudy")
+    show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
-    create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy")
+    # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", both_players=False)
 
     # ===========================================================
 
@@ -917,7 +942,7 @@ if __name__ == "__main__":
 
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
     # show_study_results(dates_pilot, "Purple", "/PilotStudy")
-    create_csv_file("pilot_study.csv", dates_pilot, "/PilotStudy")
+    # create_csv_file("pilot_study.csv", dates_pilot, "/PilotStudy", both_players=False)
 
     # ===========================================================
 
@@ -925,18 +950,18 @@ if __name__ == "__main__":
     # ======================= (Pilot) Experiments =======================
 
     dates_fmri_1 = {
-        "FSM": "2024-02-13_19-19-16",
-        "RL": "2024-02-13_19-05-14"
+        "RL": "2024-02-13_19-05-14",
+        "FSM": "2024-02-13_19-19-16"
     }
 
     dates_fmri_2 = {
-        "FSM": "2024-02-13_20-22-08",
-        "RL": "2024-02-13_20-36-09"
+        "RL": "2024-02-13_20-36-09",
+        "FSM": "2024-02-13_20-22-08"
     }
 
     # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
     # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
-    create_csv_file("pilot_fmri.csv", [dates_fmri_1, dates_fmri_2], "/fMRI")
+    # create_csv_file("pilot_fmri.csv", [dates_fmri_1, dates_fmri_2], "/fMRI", both_players=False)
 
     # =========================================================
 
@@ -1004,11 +1029,12 @@ if __name__ == "__main__":
     }
 
     fsm_rl_4_7 = {
-        "7.0 throw chance": "2024-02-26_14-44-42"
+        "fsm-rl 7.0 throw chance": "2024-02-26_14-44-42"
     }
 
     # show_study_results([fsm_rl_4_7], "Blue", "/FSM-RL")
     # show_study_results([fsm_rl_4_7], "Purple", "/FSM-RL")
+    # create_csv_file("comparison.csv", [fsm_rl_4_7], "/FSM-RL")
     
     
     # Not accessible
