@@ -1,5 +1,6 @@
 fileFormatVersion: 2
 <<<<<<< HEAD
+<<<<<<< HEAD
 guid: 6ea0b7ecb2fb74fc88a86d8f2e290e67
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI/PlayerData.meta
@@ -8,6 +9,9 @@ guid: 3a775b82ba74dbe48a55781da3feeab7
 guid: 6ea0b7ecb2fb74fc88a86d8f2e290e67
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData/clean.meta
 >>>>>>> Create comparison scene
+=======
+guid: 6ea0b7ecb2fb74fc88a86d8f2e290e67
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

@@ -1,5 +1,6 @@
 fileFormatVersion: 2
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD:Assets/Dodgeball/Logs/MAPOCA-Comp/Position.meta
 guid: 5aa74331f18cc4ff19877f6679315d64
 =======
@@ -8,6 +9,13 @@ guid: 643185a0a57d549d68a629fcf4e59b0e
 =======
 guid: 5aa74331f18cc4ff19877f6679315d64
 >>>>>>> Experiment with comparison
+=======
+<<<<<<< HEAD:Assets/Dodgeball/Logs/ElenTest/Position.meta
+guid: e615bd999951ed84b93d50d18c62b76b
+=======
+guid: 5aa74331f18cc4ff19877f6679315d64
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d:Assets/Dodgeball/Logs/MAPOCA-Comp/Position.meta
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

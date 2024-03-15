@@ -9,7 +9,7 @@ def getLogData(name, date, subfolder="") -> str:
     Returns the log data from one log file from the time of date, as a string
     name - PlayerData , Position or Results
     """
-    log_path = "Assets/Dodgeball/Logs/fMRI_2024-03-05" + subfolder
+    log_path = "Assets/Dodgeball/Logs" + subfolder
 
     part_path = ""
     if name == "PlayerData":

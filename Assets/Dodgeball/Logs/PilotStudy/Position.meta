@@ -1,5 +1,6 @@
 fileFormatVersion: 2
 <<<<<<< HEAD
+<<<<<<< HEAD
 guid: 643185a0a57d549d68a629fcf4e59b0e
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/MAPOCA-Comp/Position.meta
@@ -8,6 +9,9 @@ guid: 5aa74331f18cc4ff19877f6679315d64
 guid: 643185a0a57d549d68a629fcf4e59b0e
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/Position.meta
 >>>>>>> Create comparison scene
+=======
+guid: 643185a0a57d549d68a629fcf4e59b0e
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

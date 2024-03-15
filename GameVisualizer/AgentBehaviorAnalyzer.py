@@ -903,7 +903,7 @@ if __name__ == "__main__":
         "FSM-V0": FSM0_date,
     }
 
-    show_study_results([dates_pre_study], "Purple", "/PreStudy")
+    # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
     # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", both_players=False)
 
@@ -1054,8 +1054,8 @@ if __name__ == "__main__":
         "RL": "2024-02-26_12-15-05"
     }
 
-    show_study_results([elen, sindre], "Purple", "/ElenTest")
-    show_study_results([elen, sindre], "Blue", "/ElenTest")
+    # show_study_results([elen, sindre], "Purple", "/ElenTest")
+    # show_study_results([elen, sindre], "Blue", "/ElenTest")
 
     dates_comparison = {
         "FSM-RL": "2024-02-23_12-30-10",
