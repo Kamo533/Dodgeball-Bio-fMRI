@@ -1,0 +1,16 @@
+Time: 13:38:56.905, Winner: Purple, Blue lives left: 0, Purple lives left: 3
+Time: 13:40:46.702, Winner: Blue, Blue lives left: 1, Purple lives left: 0
+Time: 13:42:04.544, Winner: Blue, Blue lives left: 2, Purple lives left: 0
+Time: 13:43:21.791, Winner: Blue, Blue lives left: 3, Purple lives left: 0
+Time: 13:43:54.164, Winner: Purple, Blue lives left: 0, Purple lives left: 3
+Time: 13:45:17.991, Winner: Purple, Blue lives left: 0, Purple lives left: 2
+Time: 13:45:52.815, Winner: Purple, Blue lives left: 0, Purple lives left: 2
+Time: 13:47:08.304, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 13:48:10.930, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 13:50:42.735, Winner: Blue, Blue lives left: 1, Purple lives left: 0
+Time: 13:51:27.569, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 13:52:50.158, Winner: Purple, Blue lives left: 0, Purple lives left: 3
+Time: 13:54:05.068, Winner: Blue, Blue lives left: 3, Purple lives left: 0
+Time: 13:54:40.781, Winner: Purple, Blue lives left: 0, Purple lives left: 2
+Time: 13:55:54.642, Winner: Purple, Blue lives left: 0, Purple lives left: 1
+Time: 13:57:44.023, Winner: Purple, Blue lives left: 0, Purple lives left: 2
