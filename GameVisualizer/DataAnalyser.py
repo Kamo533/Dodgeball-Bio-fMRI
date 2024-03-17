@@ -6,22 +6,30 @@ import os
 
 class DataAnalyzer:
 
-    def __init__(self, subfolder=""):
+    def __init__(self, subfolder="", skiprows=None, nrows=None):
         self.df = None
         args = sys.argv[1:]
         # self.folder_path = "C:\\Users\\Kamo\\Desktop\\testBuild\\Test\\Dodgeball\\Logs\\PlayerData\\" # args[0] # Change to folder path
         self.folder_path = "Assets/Dodgeball/Logs" + subfolder + "/PlayerData/"
         self.filename = ""
+        self.nrows = nrows
+        self.skiprows = skiprows
 
     def read_data(self):
-        self.df = pd.read_csv(self.folder_path+self.filename)
+        if self.skiprows == None:
+            self.df = pd.read_csv(self.folder_path + self.filename, skiprows=self.skiprows, nrows=self.nrows)
+        else:
+            self.df = pd.read_csv(self.folder_path + self.filename)
+            top = self.df.head(1)
+            bottom = self.df.tail(-self.skiprows)
+            self.df = pd.concat([top,bottom])
 
     def save_data(self):
-        file_dest = self.folder_path+"clean/"
+        file_dest = self.folder_path + "clean/"
         if not os.path.exists(file_dest):
             os.makedirs(file_dest)
-        print(file_dest+self.filename)
-        self.df.to_csv(path_or_buf=file_dest+self.filename)
+        print(file_dest + self.filename)
+        self.df.to_csv(path_or_buf=file_dest+self.filename + "_" + str(self.skiprows))
 
     def print_data(self):
         print(self.df)
@@ -30,7 +38,7 @@ class DataAnalyzer:
         seconds = self.df.elapsed_time.max()
         minutes = int(seconds / 60)
         rest_seconds = seconds % 60
-        print("TOTAL TIME OF LOG: "+str(seconds) + " seconds (" + str(minutes) + " min " + str(round(rest_seconds, 2)) + " seconds)\n")
+        print("TOTAL TIME OF LOG: " + str(seconds) + " seconds (" + str(minutes) + " min " + str(round(rest_seconds, 2)) + " seconds)\n")
 
     def clean_data(self):
         """
@@ -42,7 +50,8 @@ class DataAnalyzer:
         self.df['Timestamp'] = pd.to_datetime(self.df['Timestamp'], format='%H:%M:%S.%f')
 
         # Find S elapsed time
-        s_elapsed = self.df.loc[self.df.EventType == "S", "Timestamp"].min()
+        if self.skiprows == None : s_elapsed = self.df.loc[self.df.EventType == "S", "Timestamp"].min()
+        else : s_elapsed = self.df.loc[self.df.EventType == "ResetScene", "Timestamp"].min()
 
         # Select subset of DataFrame where Timestamp is greater than or equal to s_elapsed
         self.df = self.df[self.df['Timestamp'] >= s_elapsed]
@@ -244,7 +253,7 @@ class DataAnalyzer:
         print(f'{player} had a precision of {round(precision * 100, 2)} %')
     
 
-    def print_ball_hold(self, player="Blue"):
+    def print_ball_hold(self, player='Blue'):
         ball_hold = self.calculate_average_ball_hold(player)
         print(f'{player} held {round(ball_hold, 2)} balls on average')
 
