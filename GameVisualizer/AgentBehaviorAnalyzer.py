@@ -125,24 +125,55 @@ def close_to_bush(pos, bush, distance=3):
 
 class AgentBehaviorAnalyzer:
 
-    def __init__(self, date="2024-02-07_14-44-25", subfolder="", fsm=False):
+    def __init__(self, date="2024-02-07_14-44-25", subfolder="", fsm=False, split=False, first=True):
+        """
+        Initialize the analyzer with the date of the logs and the subfolder in which the logs are located.
+        fsm is whether the game session took place in the fsm game environment.
+        split is whether the game logs should be split in two in order to compare the first and second half.
+        first is whether the first or the second half should be taken into consideration (if split is True).
+        """
         self.date = date
-        self.player_data = PlayerData(getLogData("PlayerData", date, subfolder))
-        self.position_data = PositionData(getLogData("Position", date, subfolder))
-        self.results_data = getLogData("Results", date, subfolder)
+        self.event_list = PlayerData(getLogData("PlayerData", date, subfolder)).event_list
+        self.pos_list = PositionData(getLogData("Position", date, subfolder)).pos_list
+        self.results_data = getLogData("Results", date, subfolder).splitlines()
         if fsm : y_delta = 0
         else : y_delta = 34
         self.zone_number_x = 3
         self.zone_number_y = 4
         self.zones = define_zones(define_corners(y_delta=y_delta, margin=0.5), self.zone_number_x, self.zone_number_y)
         self.bushes = define_bushes(y_delta=y_delta)
+        self.da = add_data_analyzer(date, subfolder)
+        # Split logs in two if split is True
+        if split : self.split_logs(date, subfolder, first)
+    
+
+    def split_logs(self, date="2024-02-07_14-44-25", subfolder="", first=True):
+        """
+        Split all game logs in two for a specific game session.
+        If first is True, the first half should be used, else, the second half should be used.
+        """
+        no_games = self.da.count_event_occurences("GameEnd")
+        event_split_index = [i for i, n in enumerate(self.event_list) if n.event_type == "GameEnd"][no_games//2]
+        timestamp = self.event_list[event_split_index].timestamp
+        position = self.get_position_data(timestamp)
+        pos_split_index = self.pos_list.index(position)
+        if first:
+            self.event_list = self.event_list[:event_split_index]
+            self.pos_list = self.pos_list[:pos_split_index]
+            self.results_data = self.results_data[:no_games//2]
+            self.da = add_data_analyzer(date, subfolder, None, event_split_index)
+        else:
+            self.event_list = self.event_list[event_split_index:]
+            self.pos_list = self.pos_list[pos_split_index:]
+            self.results_data = self.results_data[no_games//2:]
+            self.da = add_data_analyzer(date, subfolder, event_split_index, None)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
         """
         Return the timestamp in the position list that is closest to the given timestamp.
         """
-        position_timestamps = list(map(lambda pos: pos.timestamp, self.position_data.pos_list))
+        position_timestamps = list(map(lambda pos: pos.timestamp, self.pos_list))
         return min(position_timestamps, key=lambda t: abs(t - timestamp))
     
 
@@ -151,7 +182,7 @@ class AgentBehaviorAnalyzer:
         Return position data for a given timestamp.
         """
         closest = self.find_closest_timestamp_in_positions(timestamp=timestamp)
-        return next((position for position in self.position_data.pos_list if position.timestamp == closest), None)
+        return next((position for position in self.pos_list if position.timestamp == closest), None)
     
 
     def get_position(self, pos_entry, agent="Blue"):
@@ -181,16 +212,16 @@ class AgentBehaviorAnalyzer:
         Calculate the average distance between agents.
         """
         dist_sum = 0
-        for pos_entry in self.position_data.pos_list:
+        for pos_entry in self.pos_list:
             dist_sum += math.dist(self.get_position(pos_entry, "Blue"), self.get_position(pos_entry, "Purple"))
-        return dist_sum/len(self.position_data.pos_list)
+        return dist_sum/len(self.pos_list)
 
 
     def calculate_average_throw_distance(self, agent="Blue"):
         """
         Calculate the average distance between the agent and the opponent when throwing the ball.
         """
-        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
+        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.event_list))
         dist_list = []
         for throw in throw_list:
             dist_list.append(self.calculate_distance_between_agents(throw.timestamp))
@@ -218,7 +249,7 @@ class AgentBehaviorAnalyzer:
         """
         Calculate the average degree the agent is rotated relative to the opponent when throwing the ball.
         """
-        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
+        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.event_list))
         angle_list = []
         for throw in throw_list:
             angle_list.append(self.calculate_rotation_difference(throw.timestamp, agent))
@@ -232,7 +263,7 @@ class AgentBehaviorAnalyzer:
         opponent_angle determines whether it is the opponent's angle that is calculated or the agent's angle.
         opponent_angle = True will typically give angles closer to 0 as the opponent is facing the agent when throwing.
         """
-        hit_list = list(filter(lambda event: (event.event_type == "Hit" + agent), self.player_data.event_list))
+        hit_list = list(filter(lambda event: (event.event_type == "Hit" + agent), self.event_list))
         if opponent_angle:
             if agent == "Blue" : agent = "Purple"
             else : agent = "Blue"
@@ -257,7 +288,7 @@ class AgentBehaviorAnalyzer:
                 if lines_crossing(pos_agent, pos_opp, bush_start, bush_end) : return False
             return True
 
-        return list(filter(lambda pos: is_facing(pos, agent, margin_degrees) and no_obstacles(pos, agent), self.position_data.pos_list))
+        return list(filter(lambda pos: is_facing(pos, agent, margin_degrees) and no_obstacles(pos, agent), self.pos_list))
     
 
     def calculate_percentage_facing_opponent(self, agent="Blue", margin_degrees=10):
@@ -266,7 +297,7 @@ class AgentBehaviorAnalyzer:
         margin_degrees is how many degrees agent can be rotated away from opponent while still being considered facing the opponent.
         """
         facing_list = self.get_instances_of_facing_opponent(agent)
-        return len(facing_list)/len(self.position_data.pos_list)
+        return len(facing_list)/len(self.pos_list)
     
 
     def find_agent_zone(self, timestamp, agent="Blue"):
@@ -294,11 +325,11 @@ class AgentBehaviorAnalyzer:
         zone_percentage = {}
         for zone in self.zones.keys():
             zone_count[zone] = 0
-        for pos in self.position_data.pos_list:
+        for pos in self.pos_list:
             zone = self.find_agent_zone(pos.timestamp, agent)
             zone_count[zone] += 1
         for zone in zone_count.keys():
-            zone_percentage[zone] = zone_count[zone]/len(self.position_data.pos_list)
+            zone_percentage[zone] = zone_count[zone]/len(self.pos_list)
         return zone_percentage
     
 
@@ -306,7 +337,7 @@ class AgentBehaviorAnalyzer:
         """
         Return the zone where the agent is in the beginning of the game.
         """
-        timestamp = self.position_data.pos_list[0].timestamp
+        timestamp = self.pos_list[0].timestamp
         return self.find_agent_zone(timestamp, agent)
     
 
@@ -347,10 +378,10 @@ class AgentBehaviorAnalyzer:
         """
         Calculate the how long it takes on average for the agent to throw the ball after pickup.
         """
-        pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.player_data.event_list))
-        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.player_data.event_list))
-        game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.player_data.event_list))
-        reset_list = list(filter(lambda event: (event.event_type == "ResetScene"), self.player_data.event_list))
+        pick_list = list(filter(lambda event: (event.event_type == agent + "PickedUpBall"), self.event_list))
+        throw_list = list(filter(lambda event: (event.event_type == agent + "ThrewBall"), self.event_list))
+        game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.event_list))
+        reset_list = list(filter(lambda event: (event.event_type == "ResetScene"), self.event_list))
         time_list = []
 
         i = 0
@@ -385,9 +416,9 @@ class AgentBehaviorAnalyzer:
         """
         rot_change_count = 0
         right_turn = True
-        if agent == "Blue" : prev_rot = self.position_data.pos_list[0].rotation_blue
-        else : prev_rot = self.position_data.pos_list[0].rotation_purple
-        for pos in self.position_data.pos_list[1:]:
+        if agent == "Blue" : prev_rot = self.pos_list[0].rotation_blue
+        else : prev_rot = self.pos_list[0].rotation_purple
+        for pos in self.pos_list[1:]:
             if agent == "Blue" : rot = pos.rotation_blue
             else : rot = pos.rotation_purple
             diff = ((rot - prev_rot) + 180) % 360 - 180
@@ -396,7 +427,7 @@ class AgentBehaviorAnalyzer:
             if diff != 0 and (right_turn == is_turning_right):
                 rot_change_count += 1
                 right_turn = is_turning_right
-        return rot_change_count/len(self.position_data.pos_list)
+        return rot_change_count/len(self.pos_list)
     
 
 
@@ -418,8 +449,8 @@ class AgentBehaviorAnalyzer:
         """
         Calculate the percentage of time the agent spends within a given distance from a bush.
         """
-        close_list = list(filter(lambda pos: (self.is_close_to_bush(pos.timestamp, agent, distance)), self.position_data.pos_list))
-        return len(close_list)/len(self.position_data.pos_list)
+        close_list = list(filter(lambda pos: (self.is_close_to_bush(pos.timestamp, agent, distance)), self.pos_list))
+        return len(close_list)/len(self.pos_list)
 
 
 
@@ -428,7 +459,7 @@ class AgentBehaviorAnalyzer:
         Calculate the percentage of time the agent spends hiding from the opponent behind a bush.
         """
         hiding_count = 0
-        for pos_entry in self.position_data.pos_list:
+        for pos_entry in self.pos_list:
             pos = self.get_position(pos_entry, agent)
             pos_opponent = self.get_opponent_position(pos_entry, agent)
             for bush in self.bushes:
@@ -436,7 +467,7 @@ class AgentBehaviorAnalyzer:
                 # Is hiding if the line between the agents is crossing the bush and the agent is close to that bush
                 if lines_crossing(pos, pos_opponent, bush_start, bush_end) and close_to_bush(pos, bush):
                     hiding_count += 1
-        return hiding_count/len(self.position_data.pos_list)
+        return hiding_count/len(self.pos_list)
 
     
 
@@ -444,7 +475,7 @@ class AgentBehaviorAnalyzer:
         """
         Count how many times the agent won a game.
         """
-        iterator = iter(self.results_data.splitlines())
+        iterator = iter(self.results_data)
         count = 0
         for result_line in iterator:
             data = result_line.split(",")
@@ -479,16 +510,16 @@ class AgentBehaviorAnalyzer:
         """
         Calculate the percentage of time the agent spends moving away from its opponent.
         """
-        move_away_count = self.count_move(agent, self.position_data.pos_list)
-        return move_away_count/len(self.position_data.pos_list)
+        move_away_count = self.count_move(agent, self.pos_list)
+        return move_away_count/len(self.pos_list)
     
 
     def find_move_towards_percentage(self, agent="Blue"):
         """
         Calculate the percentage of time the agent spends moving away from its opponent.
         """
-        move_away_count = self.count_move(agent, self.position_data.pos_list, move_away=False)
-        return move_away_count/len(self.position_data.pos_list)
+        move_away_count = self.count_move(agent, self.pos_list, move_away=False)
+        return move_away_count/len(self.pos_list)
     
 
     def calculate_move_when_facing_opponent(self, agent="Blue", margin_degrees=20, move_away=True):
@@ -703,11 +734,19 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
 
 
-def generate_statistics_dict(date_list=[{}], subfolder="", both_players=True):
+def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=False):
+    """
+    Return a list of fields (measures) for the csv file, as well as a dictionary with all statistics.
+    If no player is specified, data for both players are returned.
+    If split is True, each game log will be split in two.
+    """
     statistics_dict = []
     labels = list(date_list[0].keys())
 
     def add_statistics(user_dict={}, agent="Purple", agent_marker="", labels=[]):
+        """
+        Add all statistics to the user dictionary.
+        """
         if agent == "Blue" : opponent = "Purple"
         else : opponent = "Blue"
 
@@ -743,23 +782,40 @@ def generate_statistics_dict(date_list=[{}], subfolder="", both_players=True):
         return user_dict
     
     def generate_fields(measure="", fields=[]):
+        """
+        Add fields that should be present in the csv file.
+        """
         for agent in labels:
-            fields.append(measure + " " + agent + " (agent)")
-        if both_players:
+            if player == "Blue" : fields.append(measure + " " + agent + " (user)")
+            else : fields.append(measure + " " + agent + " (agent)")
+        if player == "":
             for agent in labels:
                 fields.append(measure + " " + agent + " (user)")
         return fields
     
     i = 1
+    changed = False
     for dates in date_list:
-        user_dict = {}
-        analyzers, da_analyzers = prepare_comparison(dates, subfolder)
-        user_dict["User"] = i
-        add_statistics(user_dict, "Purple", " (agent)", labels)
-        if both_players:
-            add_statistics(user_dict, "Blue", " (user)", labels)
-        statistics_dict.append(user_dict)
-        i += 1
+        # If subfolder is None, the logs are in different subfolders.
+        if subfolder == None or changed:
+            subfolder = "/fMRI_" + next(iter(dates.values()))[:10]
+            changed = True
+        all_analyzers, all_da_analyzers = prepare_comparison(dates, subfolder, split)
+        
+        n = 1
+        if split : n = 2
+        for j in range(n):
+            user_dict = {}
+            if j == 0 : analyzers, da_analyzers = all_analyzers[:len(labels)], all_da_analyzers[:len(labels)]
+            else : analyzers, da_analyzers = all_analyzers[len(labels):], all_da_analyzers[len(labels):]
+            user_dict["User"] = i
+            if player == "Blue" : add_statistics(user_dict, player, " (user)", labels)
+            else : add_statistics(user_dict, "Purple", " (agent)", labels)
+            if player == "":
+                add_statistics(user_dict, "Blue", " (user)", labels)
+            statistics_dict.append(user_dict)
+            if split : i += 0.5
+            else : i += 1
     
     fields = ["User"]
     generate_fields("Win ratio", fields)
@@ -788,14 +844,21 @@ def generate_statistics_dict(date_list=[{}], subfolder="", both_players=True):
 
 
 def write_to_csv(filename, fields, statistics_dict):
+    """
+    Write the data from the statistics dictionary to a csv file.
+    """
     with open(filename, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fields)
         writer.writeheader()
         writer.writerows(statistics_dict)
 
 
-def create_csv_file(filename, date_list=[{}], subfolder="", both_players=True):
-    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, both_players)
+def create_csv_file(filename, date_list=[{}], subfolder="", player="", split=False):
+    """
+    Create a csv file with a given filename in a given subfolder for a given list of game sessions.
+    If split is True, each log will be split in two so that the two halves can be compared.
+    """
+    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, player, split)
     write_to_csv(filename, fields, statistics_dict)
 
 
@@ -897,8 +960,8 @@ def create_csv_file(filename, date_list=[{}], subfolder="", both_players=True):
 
 def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[], agent="Blue"):
     """
-    Compare statistics to find the agent with the most similar playstyle
-    A score close to 0 indicates a similar playstyle
+    Compare statistics to find the agent with the most similar playstyle.
+    A score close to 0 indicates a similar playstyle.
     """
     score_list = []
     for i in range(len(analyzers)):
@@ -916,7 +979,7 @@ def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[],
 
 def print_playstyle_table(dates={}, agent="Purple", subfolder=""):
     """
-    Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles
+    Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles.
     """
     analyzers = []
     da_analyzers = []
@@ -941,8 +1004,12 @@ def print_playstyle_table(dates={}, agent="Purple", subfolder=""):
         print()
 
 
-def add_data_analyzer(date, subfolder=""):
-    da = DataAnalyzer(subfolder)
+def add_data_analyzer(date, subfolder="", skiprows=None, nrows=None):
+    """
+    Create a data analyzer object based on the date and the subfolder.
+    skiprows and nrows should be different from None if only part of the log should be analyzed.
+    """
+    da = DataAnalyzer(subfolder, skiprows, nrows)
     da.filename = "GameLog_Player_Data_" + date + ".txt"
     if ".meta" not in da.filename:
         da.read_data()
@@ -953,21 +1020,33 @@ def add_data_analyzer(date, subfolder=""):
 
 
 def print_divider():
+    """
+    Divide the data nicely when printing to terminal.
+    """
     print()
     for i in range(120):
         print("=", end="")
     print("\n")
 
 
-def prepare_comparison(dates={}, subfolder=""):
+def prepare_comparison(dates={}, subfolder="", split=False):
+    """
+    Return analyzers and da_analyzers associated with a specific dates dictionary (usually for one specific player).
+    If split is True, each log is split in two.
+    The function will thus return two analyzers and two da_analyzers per game session (date).
+    """
     analyzers = []
     da_analyzers = []
     for game in dates.keys():
-        if "fsm" in game.lower(): analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=True)
-        else : analyzer = AgentBehaviorAnalyzer(dates[game], subfolder)
-        da_analyzer = add_data_analyzer(dates[game], subfolder)
+        fsm = False
+        if "fsm" in game.lower() : fsm = True
+        analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split=split, first=True)
         analyzers.append(analyzer)
-        da_analyzers.append(da_analyzer)
+        da_analyzers.append(analyzer.da)
+        if split:
+            analyzer_2 = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split=True, first=False)
+            analyzers.append(analyzer_2)
+            da_analyzers.append(analyzer_2.da)
     return analyzers, da_analyzers
 
 
@@ -990,7 +1069,7 @@ def show_study_results(date_list=[{}], agent="Purple", subfolder=""):
 
 if __name__ == "__main__":
 
-    # ====================== Pre study ==========================
+    # ============================= Pre study =================================
 
     dates_pre_study = {
         "MA-POCA": MAPOCA_date,
@@ -1003,15 +1082,14 @@ if __name__ == "__main__":
         "FSM-V2": FSM2_date,
         "FSM-V0": FSM0_date,
     }
-
-    show_study_results([dates_pre_study], "Purple", "/PreStudy")
+    # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
     # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", both_players=False)
 
-    # ===========================================================
+    # ========================================================================
 
 
-    # ====================== Pilot study ========================
+    # ============================ Pilot study ===============================
 
     dates_user1 = {
         "RL_1": "2024-02-11_20-52-26",
@@ -1019,52 +1097,46 @@ if __name__ == "__main__":
         "FSM_1": "2024-02-11_20-59-06",
         "FSM_2": "2024-02-11_20-38-07",
     }
-
     dates_user2 = {
         "RL_1": "2024-02-11_21-53-42",
         "RL_2": "2024-02-11_22-08-03",
         "FSM_1": "2024-02-11_21-58-33",
         "FSM_2": "2024-02-11_22-03-24",
     }
-
     dates_user3 = {
         "RL_1": "2024-02-12_13-57-56",
         "RL_2": "2024-02-12_13-36-25",
         "FSM_1": "2024-02-12_13-43-25",
         "FSM_2": "2024-02-12_13-50-32",
     }
-
     dates_user4 = {
         "RL_1": "2024-02-12_15-27-58",
         "RL_2": "2024-02-12_15-23-53",
         "FSM_1": "2024-02-12_15-32-41",
         "FSM_2": "2024-02-12_15-19-11",
     }
-
     dates_pilot = [dates_user1, dates_user2, dates_user3, dates_user4]
     # show_study_results(dates_pilot, "Purple", "/PilotStudy")
     # create_csv_file("pilot_study.csv", dates_pilot, "/PilotStudy", both_players=False)
 
-    # ===========================================================
+    # ==========================================================================
 
 
-    # ======================= (Pilot) Experiments =======================
+    # ======================= (Pilot) Experiments ==============================
 
     dates_fmri_1 = {
         "RL": "2024-02-13_19-05-14",
         "FSM": "2024-02-13_19-19-16"
     }
-
     dates_fmri_2 = {
         "RL": "2024-02-13_20-36-09",
         "FSM": "2024-02-13_20-22-08"
     }
-
     # show_study_results([dates_fmri_1, dates_fmri_2], "Purple", "/fMRI")
     # show_study_results([dates_fmri_1, dates_fmri_2], "Blue", "/fMRI")
     # create_csv_file("pilot_fmri.csv", [dates_fmri_1, dates_fmri_2], "/fMRI", both_players=False)
 
-    # =========================================================
+    # ======================================================================
 
 
     # ======================= Post pilot experiments =======================
@@ -1073,62 +1145,61 @@ if __name__ == "__main__":
         "FSM": "2024-02-14_16-35-48",
         "RL": "2024-02-14_16-43-48"
     }
-
     dates_fsm4 = {
         "FSM 4.1": "2024-02-20_14-47-23",
         "FSM 4.2": "2024-02-20_15-19-53",
         "RL": "2024-02-20_14-35-25"
     }
-
     # show_study_results([dates_post_fmri], "Purple", "/Analyze")
     # show_study_results([dates_fsm4], "Purple", "/Analyze/FSM-4")
 
-    # ======================================================================
+    # ========================================================================
+
+
+
+    # ======================= Test different parameters =======================
 
     fsm_rl_five_balls = {
         "FSM 4": "2024-02-25_13-55-29",
         "FSM 5": "2024-02-25_14-10-21"
     }
-
-    # show_study_results([fsm_rl_five_balls], "Blue", "/FSM-RL")
-    # show_study_results([fsm_rl_five_balls], "Purple", "/FSM-RL")
-
     fsm_rl_four_balls = {
         "FSM 4": "2024-02-25_21-10-02",
         "FSM 5": "2024-02-25_21-21-02"
     }
-
-    # show_study_results([fsm_rl_four_balls], "Blue", "/FSM-RL")
-    # show_study_results([fsm_rl_four_balls], "Purple", "/FSM-RL")
-    
     five_balls = {
         "FSM 4": "2024-02-25_21-49-40",
         "FSM 5": "2024-02-25_21-57-06",
         "RL": "2024-02-25_22-04-26"
     }
-
-    # show_study_results([five_balls], "Purple", "/Analyze/FSM-4")
-
     four_balls = {
         "FSM 4": "2024-02-25_22-13-32",
         "FSM 5": "2024-02-25_22-28-52",
         "RL": "2024-02-25_22-20-20"
     }
-
+    # show_study_results([fsm_rl_five_balls], "Blue", "/FSM-RL")
+    # show_study_results([fsm_rl_five_balls], "Purple", "/FSM-RL")
+    # show_study_results([fsm_rl_four_balls], "Blue", "/FSM-RL")
+    # show_study_results([fsm_rl_four_balls], "Purple", "/FSM-RL")
+    # show_study_results([five_balls], "Purple", "/Analyze/FSM-4")
     # show_study_results([four_balls], "Purple", "/Analyze/FSM-4")
+
+    # ======================================================================
+
+
+
+    # ======================= Compare agents ===============================
 
     compare_fsm_0 = {
         "FSM 4": "2024-02-26_10-51-49",
         "FSM 5": "2024-02-26_11-24-28",
         "RL": "2024-02-26_10-40-19"
     }
-
     # show_study_results([compare_fsm_0], "Purple", "/Analyze/FSM-4")
 
     fsm_rl_4_55 = {
         "5.5 throw chance": "2024-02-26_13-15-44",
     }
-
     fsm_rl_4_7 = {
         "fsm-rl 7.0 throw chance": "2024-02-26_14-44-42"
     }
@@ -1136,47 +1207,86 @@ if __name__ == "__main__":
     # show_study_results([fsm_rl_4_7], "Blue", "/FSM-RL")
     # show_study_results([fsm_rl_4_7], "Purple", "/FSM-RL")
     # create_csv_file("comparison.csv", [fsm_rl_4_7], "/FSM-RL")
+
+    # ======================================================================
     
+    
+    # ============================ Div testing =============================
     
     # Not accessible
     dates_pre_fmri = {
         "FSM": "2024-02-13_15-57-30",
         "RL": "2024-02-13_16-02-46"
     }
-
-
     elen = {
         "FSM": "2024-02-26_12-01-15",
         "RL": "2024-02-26_12-07-26"
     }
-
     sindre = {
         "FSM": "2024-02-26_12-20-53",
         "RL": "2024-02-26_12-15-05"
     }
-
-    show_study_results([elen, sindre], "Purple", "/ElenTest")
-    show_study_results([elen, sindre], "Blue", "/ElenTest")
+    # show_study_results([elen, sindre], "Purple", "/ElenTest")
+    # show_study_results([elen, sindre], "Blue", "/ElenTest")
 
     dates_comparison = {
         "FSM-RL": "2024-02-23_12-30-10",
         "FSM-RL 2": "2024-02-23_12-48-03",
     }
-
     test_comparison = {
         "RL-RL": "2024-02-25_12-49-26",
     }
-
     fsm0_rl = {
         "FSM0-RL": "2024-02-25_13-13-26"
     }
-
     # show_study_results([dates_comparison], "Blue", "/FSM-RL")
     # show_study_results([test_comparison], "Purple", "/FSM-RL")
-
     # show_study_results([fsm0_rl], "Blue", "/FSM-RL")
     # show_study_results([fsm0_rl], "Purple", "/FSM-RL")
 
-    
-    
+    # ======================================================================
 
+
+    # ============================== Experiments ==============================
+
+    dates_id_18 = {
+        "FSM": "2024-02-27_14-29-02",
+        "RL": "2024-02-27_14-13-36"
+    }
+    dates_id_19 = {
+        "FSM": "2024-02-27_18-36-02",
+        "RL": "2024-02-27_18-53-21"
+    }
+    dates_id_20 = {
+        "FSM": "2024-02-27_20-10-18",
+        "RL": "2024-02-27_19-47-30"
+    }
+    dates_id_21 = {
+        "FSM": "2024-03-05_13-20-16",
+        "RL": "2024-03-05_13-41-09"
+    }
+    dates_id_22 = {
+        "FSM": "2024-03-05_15-04-18",
+        "RL": "2024-03-05_14-36-32"
+    }
+    dates_id_23 = {
+        "FSM": "2024-03-05_18-28-50",
+        "RL": "2024-03-05_18-55-57"
+    }
+    dates_id_24 = {
+        "FSM": "2024-03-05_20-12-41",
+        "RL": "2024-03-05_19-46-27"
+    }
+
+    dates_2702_0305 = [dates_id_18, dates_id_19, dates_id_20, dates_id_21, dates_id_22, dates_id_23, dates_id_24]
+    dates_2702 = [dates_id_18, dates_id_19, dates_id_20]
+    dates_0305 = [dates_id_21, dates_id_22, dates_id_23, dates_id_24]
+
+    # create_csv_file("fMRI-2702-0503.csv", dates_2702_0305, None)
+    # create_csv_file("fMRI-2702-split.csv", dates_2702, None, player="Blue", split=True)
+    # create_csv_file("fMRI-0305-split.csv", dates_0305, None, player="Blue", split=True)
+
+    # ==========================================================================
+
+    
+    
