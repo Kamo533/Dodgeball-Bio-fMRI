@@ -5,7 +5,7 @@ from LogInterpreter import *
 
 # TODO:
 # marker start/slutt
-# Satt verdi på x- og y- akse (lettere sammmenligning)
+# sørge for like mange punkter før og etter event
 
 def plotEvent(event : str, games : GameDataContainer):
     """
@@ -31,7 +31,7 @@ def plotEvent(event : str, games : GameDataContainer):
         raise Exception(f"{event} is not a valid event to plot. Must be one of {possible_events}")
     
 
-    interval = 3.9 # num points before and after event
+    interval = 4.9 # num points before and after event
 
     h_plot  = 5
     v_plot = 3
@@ -56,7 +56,7 @@ def plotEvent(event : str, games : GameDataContainer):
             agent_pos = games.games[i].pos_data.positionList(blue_owner, pos)
 
             axs[e//h_plot, e % h_plot].scatter([x for x, _, _ in agent_pos], [y for _, y, _ in agent_pos])
-            axs[e//h_plot, e % h_plot].set_title( f"{game_events[e].timestamp}" + ("Blue" if blue_owner else games.games[i].game_type))
+            axs[e//h_plot, e % h_plot].set_title(  ("Blue" if blue_owner else games.games[i].game_type)) # f"{game_events[e].timestamp}" +
             
             event_pos_tot = games.games[i].getEventPos(game_events[e].timestamp)
             event_pos = [event_pos_tot.pos_blue_x if blue_owner else event_pos_tot.pos_purple_x], [event_pos_tot.pos_blue_y if blue_owner else event_pos_tot.pos_purple_y]
