@@ -2,10 +2,14 @@ fileFormatVersion: 2
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 guid: a783b48b480864aeaaae7db9370f6fc4
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/Results.meta
 guid: 0bb241a0c71a9af4286d10456b677c00
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI_2024-02-27/Results.meta
 guid: 25f61884adb459241a2d47bb3c0e1eee
@@ -14,17 +18,26 @@ guid: 25f61884adb459241a2d47bb3c0e1eee
 <<<<<<< HEAD:Assets/Dodgeball/Logs/Pilot/Results.meta
 guid: 62cd2b7f560d3144b938ec3f2d6310cc
 >>>>>>> Create comparison scene
+=======
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 folderAsset: yes
 =======
 guid: a783b48b480864aeaaae7db9370f6fc4
 >>>>>>> Create comparison scene:Assets/Dodgeball/Scenes/Comparison.unity.meta
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> Create comparison scene
 =======
 >>>>>>> Create comparison scene
 =======
 >>>>>>> Create comparison scene
+=======
+>>>>>>> Create comparison scene
+=======
+guid: a783b48b480864aeaaae7db9370f6fc4
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 DefaultImporter:
   externalObjects: {}
   userData: 

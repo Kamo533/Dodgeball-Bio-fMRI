@@ -1,5 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 24f22687fe6fd4708bacef295d067439
+=======
+<<<<<<< HEAD:Assets/Dodgeball/Logs/FSM-RL/Results.meta
+guid: 2094c818d7e1548f792e3302d55851f9
+=======
+guid: 24f22687fe6fd4708bacef295d067439
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58:Assets/Dodgeball/Logs/MAPOCA-Comp.meta
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

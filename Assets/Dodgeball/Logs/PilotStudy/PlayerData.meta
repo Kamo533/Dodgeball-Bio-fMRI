@@ -2,6 +2,9 @@ fileFormatVersion: 2
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 guid: 6e1b47a89d3b545d5b511015e27b7d28
 =======
 <<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI_2024-02-27/PlayerData.meta
@@ -11,6 +14,7 @@ guid: 6e1b47a89d3b545d5b511015e27b7d28
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData.meta
 >>>>>>> Create comparison scene
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD:Assets/Dodgeball/Logs/ElenTest/PlayerData.meta
 guid: 8f4f1b269fe5ea14ab83ed9063b3e56c
 =======
@@ -18,12 +22,19 @@ guid: 6e1b47a89d3b545d5b511015e27b7d28
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData.meta
 >>>>>>> Create comparison scene
 =======
+=======
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 <<<<<<< HEAD:Assets/Dodgeball/Logs/Analyze/FSM-4/PlayerData.meta
 guid: b0cca8b64b55243c6a14fadc09c62997
 =======
 guid: 6e1b47a89d3b545d5b511015e27b7d28
+<<<<<<< HEAD
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/PlayerData.meta
 >>>>>>> Create comparison scene
+=======
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d:Assets/Dodgeball/Logs/PilotStudy/PlayerData.meta
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

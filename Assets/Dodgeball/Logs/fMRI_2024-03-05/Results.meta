@@ -2,8 +2,13 @@ fileFormatVersion: 2
 <<<<<<< HEAD:Assets/Dodgeball/Logs/fMRI_2024-03-05/Results.meta
 guid: d2f666068772e3a438266d668424e21e
 =======
+<<<<<<< HEAD
 guid: 4557fa8d2e176404ba9f994db03724ae
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/Results.meta
+=======
+guid: 2094c818d7e1548f792e3302d55851f9
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d:Assets/Dodgeball/Logs/FSM-RL/Results.meta
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

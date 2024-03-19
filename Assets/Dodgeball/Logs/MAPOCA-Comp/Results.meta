@@ -3,11 +3,19 @@ fileFormatVersion: 2
 <<<<<<< HEAD:Assets/Dodgeball/Logs/MAPOCA-Comp/Results.meta
 guid: f4beebfd508e14f82b7b0af4b0f606ee
 =======
+<<<<<<< HEAD
 guid: 4557fa8d2e176404ba9f994db03724ae
 >>>>>>> Create comparison scene:Assets/Dodgeball/Logs/PilotStudy/Results.meta
 =======
 guid: f4beebfd508e14f82b7b0af4b0f606ee
 >>>>>>> Experiment with comparison
+=======
+guid: 8416a8a03d1484624b9e7253c4f5cb78
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d:Assets/Dodgeball/Logs/Analyze/FSM-4/Results.meta
+=======
+guid: f4beebfd508e14f82b7b0af4b0f606ee
+>>>>>>> 320fe930d10b006603782e6f5fe7a858e33f9e0d
+>>>>>>> 07a7c190a0f9c82b24406143bbe9ce2258f75b58
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
