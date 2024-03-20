@@ -29,7 +29,8 @@ class DataAnalyzer:
         if not os.path.exists(file_dest):
             os.makedirs(file_dest)
         print(file_dest + self.filename)
-        self.df.to_csv(path_or_buf=file_dest+self.filename + "_" + str(self.skiprows))
+        if self.skiprows == None and self.nrows == None : self.df.to_csv(path_or_buf=file_dest + self.filename)
+        else : self.df.to_csv(path_or_buf=file_dest + str(self.skiprows) + "_" + self.filename)
 
     def print_data(self):
         print(self.df)
