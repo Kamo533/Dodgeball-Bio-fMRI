@@ -34,7 +34,7 @@ def plotEvent(event : str, games : GameDataContainer):
         raise Exception(f"{event} is not a valid event to plot. Must be one of {possible_events}")
     
 
-    interval = 4.9 # num points before and after event
+    interval = 4 # num points before and after event
 
     h_plot  = 5
     v_plot = 3
@@ -59,12 +59,13 @@ def plotEvent(event : str, games : GameDataContainer):
 
 
         for e in range(len(game_events)):
-            pos = games.games[i].pos_data.getGamePos(game_events[e].timestamp - timedelta(0, (interval)*0.1), game_events[e].timestamp + timedelta(0, (interval)*0.1))
+            time_interval = timedelta(0, (interval+2)*0.1)
+            pos = games.games[i].pos_data.getGamePos(game_events[e].timestamp - time_interval, game_events[e].timestamp + time_interval)
+            event_pos_both = games.games[i].getEventPos(game_events[e].timestamp)
+            pos = pos[pos.index(event_pos_both)-interval:pos.index(event_pos_both)+interval+1]
 
             blue_owner = True if "Blue" in game_events[e].event_type else False
 
-            # agent_pos = games.games[i].pos_data.positionList(blue_owner, pos)
-            event_pos_both = games.games[i].getEventPos(game_events[e].timestamp)
             event_pos = [event_pos_both.pos_blue_x if blue_owner else event_pos_both.pos_purple_x], [event_pos_both.pos_blue_y if blue_owner else event_pos_both.pos_purple_y]
             agent_pos = setEventInOrigo(event_pos=event_pos, movement_pos=games.games[i].pos_data.positionList(blue_owner, pos))
 
