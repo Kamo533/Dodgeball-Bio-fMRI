@@ -217,5 +217,8 @@ class GameDataContainer:
     def cleanGames(self, unused_dates : list = []) -> None:
         self.games = list(filter(lambda game: game.player_data.numGames() > 0 and game.date not in unused_dates, self.games))
 
+    def numGames(self) -> int:
+        return len(self.games)
+
     def __str__(self) -> str:
         return f"GameDataContainer({[str(game) for game in self.games]})"
