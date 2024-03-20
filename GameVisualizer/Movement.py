@@ -5,10 +5,58 @@ from LogInterpreter import *
 
 # TODO:
 # marker start/slutt
-# sørge for like mange punkter før og etter event
+# sørge for like mange punkter før og etter event, gjort, men bør sjekke fortsatt funker ved spill start/slutt
 
 def setEventInOrigo(event_pos : list, movement_pos : list) -> list:
     return [(x-event_pos[0][0], y-event_pos[1][0], rotation) for x, y, rotation in movement_pos]
+
+def rotate(origin, old_x, old_y):
+    """
+    Rotate points by a given slope around a given origin.
+
+    The slope should be a number.
+    """
+    x, y = old_x, old_y
+
+    a, k = np.polyfit(x, y, 1) # approksimates y = x * a + k
+    ox, oy = origin
+
+    n = 0
+
+    while n == 0 or (np.abs(a) > 0.1 and n < 10):
+        x, y = [], []
+        angle = -np.arctan(a)
+
+        if len(old_x) == len(old_y):
+            num_points = len(old_x)
+
+            for i in range(num_points):
+                px, py = old_x[i], old_y[i]
+
+                x.append(ox + np.cos(angle) * (px - ox) - np.sin(angle) * (py - oy))
+                y.append(oy + np.sin(angle) * (px - ox) + np.cos(angle) * (py - oy))
+
+        a, k = np.polyfit(x, y, 1) # approksimates y = x * a + k
+        old_x, old_y = x, y
+        ox, oy = [0, 0]
+        n += 1
+
+        print(f"Running with a:{a} and n:{n}")
+
+    # x, y = [], []
+    # if len(old_x) == len(old_y):
+    #     num_points = len(old_x)
+    #     angle = -np.arctan(a)
+
+    #     for i in range(num_points):
+    #         px, py = old_x[i], old_y[i]
+
+    #         x.append(ox + np.cos(angle) * (px - ox) - np.sin(angle) * (py - oy))
+    #         y.append(oy + np.sin(angle) * (px - ox) + np.cos(angle) * (py - oy))
+
+
+    print(f"End with a:{a} and n:{n}")
+    return x, y
 
 def plotEvent(event : str, games : GameDataContainer):
     """
@@ -39,11 +87,11 @@ def plotEvent(event : str, games : GameDataContainer):
     h_plot  = 5
     v_plot = 3
 
-    # tot_num_events = 0
-    # for g in range(games.numGames()):
-    #     game_events = games.games[g].player_data.filterByEventType(event)
-    #     tot_num_events += len(game_events)
-    # print(f"Total number of events: {tot_num_events}")
+    tot_num_events = 0
+    for g in range(games.numGames()):
+        game_events = games.games[g].player_data.filterByEventType(event)
+        tot_num_events += len(game_events)
+    print(f"Total number of events: {tot_num_events}")
 
 
     for i in range(6,7):
@@ -69,11 +117,25 @@ def plotEvent(event : str, games : GameDataContainer):
             event_pos = [event_pos_both.pos_blue_x if blue_owner else event_pos_both.pos_purple_x], [event_pos_both.pos_blue_y if blue_owner else event_pos_both.pos_purple_y]
             agent_pos = setEventInOrigo(event_pos=event_pos, movement_pos=games.games[i].pos_data.positionList(blue_owner, pos))
 
-            axs[e//h_plot, e % h_plot].scatter([x for x, _, _ in agent_pos], [y for _, y, _ in agent_pos])
             axs[e//h_plot, e % h_plot].set_title(("Human" if blue_owner else games.games[i].game_type)) # f"{game_events[e].timestamp}" +
-            
-            axs[e//h_plot, e % h_plot].scatter([0], [0])
-            axs[e//h_plot, e % h_plot].axis(xmin=-5,xmax=5, ymin=-5,ymax=5)
+            axs[e//h_plot, e % h_plot].axis(xmin=-6,xmax=6, ymin=-6,ymax=6)
+
+            # Plot linear reg
+            x = np.array([x for x, _, _ in agent_pos])
+            y = np.array([y for _, y, _ in agent_pos])
+            x_new = x[:,np.newaxis]
+            a, k = np.polyfit(x, y, 1) # approksimates y = x * a + k
+            axs[e//h_plot, e % h_plot].plot([x for x, _, _ in agent_pos], [x * a + k for x, _, _ in agent_pos], 'r-')
+
+            x, y = rotate([0,0], x, y)
+
+            a2, k2 = np.polyfit(x, y, 1) # approksimates y = x * a2 + k2
+            axs[e//h_plot, e % h_plot].plot([x for x, _, _ in agent_pos], [x * a2 + k2 for x, _, _ in agent_pos], 'g-')
+
+            axs[e//h_plot, e % h_plot].plot(x, y, "-o", color="#522bbd") # Plot movement
+            axs[e//h_plot, e % h_plot].plot([x[0]], [y[0]], marker="v", color="#93FF9E") # Plot start movement
+            axs[e//h_plot, e % h_plot].plot([0], [0], marker="X", color="#fca55d") # Plot event
+
 
         plt.show()
 
@@ -99,4 +161,11 @@ experiment_games = GameDataContainer(experiments_folders, unused_games)
 # print(experiment_games)
 print(f"Number of game sessions:{experiment_games.numGames()}")
 
-plotEvent("ThrewBall", experiment_games)
+
+# possible_events = [
+#     "BlueThrewBall", "PurpleThrewBall", "ThrewBall",
+#     "BluePickedUpBall", "PurplePickedUpBall", "PickedUpBall",
+#     "HitBlue", "HitPurple", "Hit",
+#     "BlueDash", "PurpleDash", "Dash",
+# ]
+plotEvent("PickedUpBall", experiment_games)
