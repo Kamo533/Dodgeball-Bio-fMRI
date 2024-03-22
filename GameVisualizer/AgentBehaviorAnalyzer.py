@@ -167,6 +167,18 @@ class AgentBehaviorAnalyzer:
             self.pos_list = self.pos_list[pos_split_index:]
             self.results_data = self.results_data[no_games//2:]
             self.da = add_data_analyzer(date, subfolder, event_split_index, first)
+    
+
+    # NOT USED
+    def split_into_games(self, date="2024-02-07_14-44-25", subfolder="", game_no=1):
+        """
+        Split all game logs so that only a single game is analyzed.
+        game_no specifies which game that should be analyzed, in ascending order.
+        """
+        event_split_index = [i for i, n in enumerate(self.event_list) if n.event_type == "GameEnd"][game_no]
+        timestamp = self.event_list[event_split_index].timestamp
+        position = self.get_position_data(timestamp)
+        pos_split_index = self.pos_list.index(position)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -965,12 +977,19 @@ def prepare_comparison(dates={}, subfolder="", split=False):
 
 
 def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
+    """
+    Print statistics for each item (game session) in the date dictionary.
+    """
     analyzers, da_analyzers = prepare_comparison(dates, subfolder)
     print_divider()
     compare(analyzers, da_analyzers, dates.keys(), agent)
 
 
 def show_study_results(date_list=[{}], agent="Purple", subfolder=""):
+    """
+    Print statistics for multiple users at the same time.
+    The dictionaries in date_list each contain the dates of the game sessions for a single user.
+    """
     i = 1
     for dates in date_list:
         print_divider()
@@ -1215,6 +1234,22 @@ if __name__ == "__main__":
         "FSM": "2024-03-14_14-00-53",
         "RL": "2024-03-14_13-35-23"
     }
+    dates_id_31 = {
+        "FSM": "2024-03-19_13-30-40",
+        "RL": "2024-03-19_13-54-06"
+    }
+    dates_id_32 = {
+        "FSM": "2024-03-21_10-35-53",
+        "RL": "2024-03-21_10-10-30"
+    }
+    dates_id_33 = {
+        "FSM": "2024-03-21_11-59-36",
+        "RL": "2024-03-21_12-27-06"
+    }
+    dates_id_34 = {
+        "FSM": "2024-03-21_13-55-00",
+        "RL": "2024-03-21_13-28-38"
+    }
 
 
     dates_2702_0305 = [dates_id_18, dates_id_19, dates_id_20, dates_id_21, dates_id_22, dates_id_23, dates_id_24]
@@ -1222,19 +1257,26 @@ if __name__ == "__main__":
     dates_0503 = [dates_id_21, dates_id_22, dates_id_23, dates_id_24]
     dates_1203 = [dates_id_25, dates_id_26, dates_id_27, dates_id_28]
     dates_1403 = [dates_id_29, dates_id_30]
+    dates_1903 = [dates_id_31]
+    dates_2103 = [dates_id_32, dates_id_33, dates_id_34]
     dates = [dates_id_18, dates_id_19, dates_id_20, dates_id_21, dates_id_22, dates_id_23, dates_id_24, 
-        dates_id_25, dates_id_26, dates_id_27, dates_id_28, dates_id_29, dates_id_30]
+        dates_id_25, dates_id_26, dates_id_27, dates_id_28, dates_id_29, dates_id_30, dates_id_31,
+        dates_id_32, dates_id_33, dates_id_34]
 
     # create_csv_file("fMRI-2702.csv", dates_2702, None, player="Blue", start_id=18)
     # create_csv_file("fMRI-2702-split.csv", dates_2702, None, player="Blue", split=True, start_id=18)
     # create_csv_file("fMRI-0503-split.csv", dates_0503, None, player="Blue", split=True, start_id=21)
     # create_csv_file("fMRI-1203-split.csv", dates_1203, None, player="Blue", split=True, start_id=25)
     # create_csv_file("fMRI-1403-split.csv", dates_1403, None, player="Blue", split=True, start_id=29)
+    # create_csv_file("fMRI-1903-split.csv", dates_1903, None, player="Blue", split=True, start_id=31)
+    # create_csv_file("fMRI-2103-split.csv", dates_2103, None, player="Blue", split=True, start_id=32)
 
     # create_csv_file("fMRI-2702-agents.csv", dates_2702, None, player="", split=False, start_id=18)
-    create_csv_file("fMRI-0503-agents.csv", dates_0503, None, player="", split=False, start_id=21)
+    # create_csv_file("fMRI-0503-agents.csv", dates_0503, None, player="", split=False, start_id=21)
     # create_csv_file("fMRI-1203-agents.csv", dates_1203, None, player="", split=False, start_id=25)
     # create_csv_file("fMRI-1403-agents.csv", dates_1403, None, player="", split=False, start_id=29)
+    # create_csv_file("fMRI-1903-agents.csv", dates_1903, None, player="", split=False, start_id=31)
+    # create_csv_file("fMRI-2103-agents.csv", dates_2103, None, player="", split=False, start_id=32)
 
     # ==========================================================================
 
