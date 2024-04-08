@@ -16,8 +16,13 @@ class DataAnalyzer:
         self.skiprows = skiprows
 
     def read_data(self):
-        if self.skiprows == None:
+        if self.skiprows == None or self.skiprows == 0:
             self.df = pd.read_csv(self.folder_path + self.filename, skiprows=self.skiprows, nrows=self.nrows)
+        elif self.skiprows != None and self.nrows != None:
+            self.df = pd.read_csv(self.folder_path + self.filename, nrows=self.nrows)
+            top = self.df.head(1)
+            bottom = self.df.tail(-self.skiprows)
+            self.df = pd.concat([top,bottom])
         else:
             self.df = pd.read_csv(self.folder_path + self.filename)
             top = self.df.head(1)
@@ -51,7 +56,7 @@ class DataAnalyzer:
         self.df['Timestamp'] = pd.to_datetime(self.df['Timestamp'], format='%H:%M:%S.%f')
 
         # Find S elapsed time
-        if self.skiprows == None : s_elapsed = self.df.loc[self.df.EventType == "S", "Timestamp"].min()
+        if self.skiprows == None or self.skiprows == 0 : s_elapsed = self.df.loc[self.df.EventType == "S", "Timestamp"].min()
         else : s_elapsed = self.df.loc[self.df.EventType == "ResetScene", "Timestamp"].min()
 
         # Select subset of DataFrame where Timestamp is greater than or equal to s_elapsed
@@ -175,11 +180,15 @@ class DataAnalyzer:
     
     
     def calculate_precision(self, player):
-        precision = None
+        precision = -1
         if player == 'Blue':
-            precision = self.count_event_occurences('HitPurple')/self.count_event_occurences('BlueThrewBall')
+            throws = self.count_event_occurences('BlueThrewBall')
+            if throws != 0:
+                precision = self.count_event_occurences('HitPurple')/throws
         elif player == 'Purple':
-            precision = self.count_event_occurences('HitBlue')/self.count_event_occurences('PurpleThrewBall')
+            throws = self.count_event_occurences('PurpleThrewBall')
+            if throws != 0:
+                precision = self.count_event_occurences('HitBlue')/throws
         return precision
     
 
@@ -211,6 +220,7 @@ class DataAnalyzer:
         ball_sum = 0
         for key in ball_hold_dict.keys():
             ball_sum += key * ball_hold_dict[key]
+        if sum(ball_hold_dict.values()) == 0 : return -1
         return ball_sum/sum(ball_hold_dict.values())
     
 
@@ -241,6 +251,7 @@ class DataAnalyzer:
                 if sequence_start != None:
                     sequence_duration = sequence_end - sequence_start
                     game_time_list.append(sequence_duration)
+        if len(game_time_list) == 0 : return self.df.elapsed_time.max()
         return sum(game_time_list)/len(game_time_list)
 
 

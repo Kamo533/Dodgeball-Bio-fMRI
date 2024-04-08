@@ -125,12 +125,12 @@ def close_to_bush(pos, bush, distance=3):
 
 class AgentBehaviorAnalyzer:
 
-    def __init__(self, date="2024-02-07_14-44-25", subfolder="", fsm=False, split=False, first=True):
+    def __init__(self, date="2024-02-07_14-44-25", subfolder="", fsm=False, split_in_two=False, first=True, game_no=None):
         """
         Initialize the analyzer with the date of the logs and the subfolder in which the logs are located.
         fsm is whether the game session took place in the fsm game environment.
-        split is whether the game logs should be split in two in order to compare the first and second half.
-        first is whether the first or the second half should be taken into consideration (if split is True).
+        split_in_two is whether the game logs should be split in two in order to compare the first and second half.
+        first is whether the first or the second half should be taken into consideration (if split_in_two is True).
         """
         self.date = date
         self.event_list = PlayerData(getLogData("PlayerData", date, subfolder)).event_list
@@ -143,11 +143,12 @@ class AgentBehaviorAnalyzer:
         self.zones = define_zones(define_corners(y_delta=y_delta, margin=0.5), self.zone_number_x, self.zone_number_y)
         self.bushes = define_bushes(y_delta=y_delta)
         self.da = add_data_analyzer(date, subfolder)
-        # Split logs in two if split is True
-        if split : self.split_logs(date, subfolder, first)
+        # Split logs in two if split_in_two is True
+        if split_in_two : self.split_logs_in_two(date, subfolder, first)
+        elif game_no != None : self.split_into_games(date, subfolder, game_no)
     
 
-    def split_logs(self, date="2024-02-07_14-44-25", subfolder="", first=True):
+    def split_logs_in_two(self, date="2024-02-07_14-44-25", subfolder="", first=True):
         """
         Split all game logs in two for a specific game session.
         If first is True, the first half should be used, else, the second half should be used.
@@ -169,16 +170,32 @@ class AgentBehaviorAnalyzer:
             self.da = add_data_analyzer(date, subfolder, event_split_index, first)
     
 
-    # NOT USED
-    def split_into_games(self, date="2024-02-07_14-44-25", subfolder="", game_no=1):
+    def split_into_games(self, date="2024-02-07_14-44-25", subfolder="", game_no=0):
         """
         Split all game logs so that only a single game is analyzed.
         game_no specifies which game that should be analyzed, in ascending order.
         """
-        event_split_index = [i for i, n in enumerate(self.event_list) if n.event_type == "GameEnd"][game_no]
-        timestamp = self.event_list[event_split_index].timestamp
+        if game_no == 0:
+            prev_event_index = 0
+            prev_pos_index = 0
+        else:
+            prev_event_index = [i for i, n in enumerate(self.event_list) if n.event_type == "ResetScene"][game_no]
+            prev_timestamp = self.event_list[prev_event_index].timestamp
+            prev_position = self.get_position_data(prev_timestamp)
+            prev_pos_index = self.pos_list.index(prev_position)
+
+        event_index = [i for i, n in enumerate(self.event_list) if n.event_type == "ResetScene"][game_no+1]
+        timestamp = self.event_list[event_index].timestamp
         position = self.get_position_data(timestamp)
-        pos_split_index = self.pos_list.index(position)
+        pos_index = self.pos_list.index(position)
+
+        self.event_list = self.event_list[prev_event_index:event_index]
+        self.pos_list = self.pos_list[prev_pos_index:pos_index]
+        self.results_data = self.results_data[game_no:game_no+1]
+        self.da = add_data_analyzer(date, subfolder, event_index, False, prev_event_index)
+
+        # for event in self.event_list:
+        #    print(event.event_type)
 
 
     def find_closest_timestamp_in_positions(self, timestamp):
@@ -237,6 +254,7 @@ class AgentBehaviorAnalyzer:
         dist_list = []
         for throw in throw_list:
             dist_list.append(self.calculate_distance_between_agents(throw.timestamp))
+        if len(dist_list) == 0 : return -1
         return sum(dist_list)/len(dist_list)
     
 
@@ -265,6 +283,7 @@ class AgentBehaviorAnalyzer:
         angle_list = []
         for throw in throw_list:
             angle_list.append(self.calculate_rotation_difference(throw.timestamp, agent))
+        if len(angle_list) == 0 : return -1
         return sum(angle_list)/len(angle_list)
     
 
@@ -395,6 +414,9 @@ class AgentBehaviorAnalyzer:
         game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.event_list))
         reset_list = list(filter(lambda event: (event.event_type == "ResetScene"), self.event_list))
         time_list = []
+        if len(reset_list) < 2:
+            reset_list = list(filter(lambda event: (event.event_type == "WinScreenStart"), self.event_list))
+            reset_list.insert(0, None)
 
         i = 0
         j = 0
@@ -410,6 +432,7 @@ class AgentBehaviorAnalyzer:
             if throw_time > reset_time and i < len(reset_list):
                 while pick_time < reset_time:
                     j += 1
+                    if len(pick_list) < j+1 : return -1000
                     pick_time = pick_list[j].timestamp
                 i += 1
                 if i < len(game_end_list):
@@ -418,6 +441,7 @@ class AgentBehaviorAnalyzer:
             j += 1
             time = throw_time - pick_time              
             time_list.append(time.total_seconds())
+        if len(time_list) == 0 : return -1
         return sum(time_list)/len(time_list)
     
 
@@ -493,7 +517,30 @@ class AgentBehaviorAnalyzer:
             data = result_line.split(",")
             if "Winner: " + agent in data[1]:
                 count += 1
+        if self.count_games() < 2:
+            opponent = "Purple"
+            if agent == "Purple" : opponent = "Blue"
+            if self.da.count_event_occurences("Hit" + opponent) == 3:
+                return 1
         return count
+        
+
+    def count_games(self):
+        """
+        Count the number of games in the game log.
+        """
+        return self.da.count_event_occurences("ResetScene") - 1
+    
+
+    def get_result(self):
+        """ Get result from a single game or from the entire game session """
+        if self.count_games() == 1:
+            if self.da.count_event_occurences("HitBlue") == 3:
+                return "BlueWins"
+            if self.da.count_event_occurences("HitPurple") == 3:
+                return "PurpleWins"
+            return "Tie"
+        return str(self.count_wins("Blue")) + "-" + str(self.count_wins("Purple"))
     
 
     def count_move(self, agent="Blue", pos_list=[], move_away=True):
@@ -741,11 +788,11 @@ def compare(analyzers=[], da_analyzers=[], labels=[], agent="Purple"):
 
 
 
-def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=False, start_id=1):
+def generate_statistics_dict(date_list=[{}], subfolder="", player="", split_in_two=False, start_id=1, split_in_games=False):
     """
     Return a list of fields (measures) for the csv file, as well as a dictionary with all statistics.
     If no player is specified, data for both players are returned.
-    If split is True, each game log will be split in two.
+    If split_in_two is True, each game log will be split in two.
     """
     statistics_dict = []
     labels = list(date_list[0].keys())
@@ -759,10 +806,13 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=Fals
 
         j = 0
         for a in analyzers:
-            win_ratio = a.count_wins(agent) / (a.count_wins(agent) + a.count_wins(opponent))
+            win_ratio = -1
+            if a.count_wins(agent) + a.count_wins(opponent) != 0:
+                win_ratio = a.count_wins(agent) / (a.count_wins(agent) + a.count_wins(opponent))
             print(labels[j] + agent_marker)
-            print("Number of games:", a.count_wins(agent) + a.count_wins(opponent))
+            print("Number of games:", a.count_games())
             print("Player wins:", a.count_wins(agent))
+            print("Agent wins:", a.count_wins(opponent))
             user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
             user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
             user_dict["Rotation change " + labels[j] + agent_marker] = round(a.calculate_rotation_change_percentage(agent)*100, 3)
@@ -777,7 +827,8 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=Fals
             user_dict["Court half favor " + labels[j] + agent_marker] = round(a.find_court_half_favor(agent)*100, 3)
             user_dict["Middle court favor " + labels[j] + agent_marker] = round(a.find_middle_court_favor(agent)*100, 3)
             user_dict["Agent distance " + labels[j]] = round(a.calculate_average_distance_between_agents(), 3)
-            user_dict["Number of games " + labels[j]] = a.count_wins(agent) + a.count_wins(opponent)
+            user_dict["Number of games " + labels[j]] = a.count_games()
+            user_dict["Result " + labels[j]] = a.get_result()
             j += 1
         
         j = 0
@@ -811,15 +862,16 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=Fals
         if subfolder == None or changed:
             subfolder = "/fMRI_" + next(iter(dates.values()))[:10]
             changed = True
-        all_analyzers, all_da_analyzers = prepare_comparison(dates, subfolder, split)
+        all_analyzers, all_da_analyzers, no_games = prepare_comparison(dates, subfolder, split_in_two, split_in_games)
         
         n = 1
-        if split : n = 2
+        if split_in_two : n = 2
+        if no_games != None : n = no_games
         for j in range(n):
             user_dict = {}
-            # FØRST får du alle for FSM, SÅ for RL (eller motsatt)
-            # analyzers [FSM 1. halvdel, FSM 2. halvdel, RL 1. halvdel, RL 2. halvdel]
-            # analyzers [FSM 1. halvdel, FSM 2. halvdel, RL 1. halvdel, RL 2. halvdel, XX 1. halvdel, XX 2. halvdel]
+            # FIRST you get all for FSM, THEN for RL (or opposite)
+            # analyzers [FSM 1. half, FSM 2. half, RL 1. half, RL 2. half]
+            # analyzers [FSM 1. half, FSM 2. half, RL 1. half, RL 2. half, XX 1. half, XX 2. half]
             # if j == 0 : analyzers, da_analyzers = all_analyzers[::n], all_da_analyzers[::n]      # all_analyzers[:len(labels)], all_da_analyzers[:len(labels)]
             # else : analyzers, da_analyzers = all_analyzers[j::n], all_da_analyzers[j::n]       # all_analyzers[len(labels):], all_da_analyzers[len(labels):]
             analyzers, da_analyzers = all_analyzers[j::n], all_da_analyzers[j::n]
@@ -829,7 +881,8 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=Fals
             if player == "":
                 add_statistics(user_dict, "Blue", " (user)", labels)
             statistics_dict.append(user_dict)
-            if split : i += 0.5
+            if no_games != None : i += 1/n
+            elif split_in_two : i += 0.5
             else : i += 1
     
     fields = ["User"]
@@ -856,6 +909,8 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split=Fals
         fields.append("Game duration " + agent)
     for agent in labels:
         fields.append("Number of games " + agent)
+    for agent in labels:
+        fields.append("Result " + agent)
 
     return fields, statistics_dict
 
@@ -870,16 +925,17 @@ def write_to_csv(filename, fields, statistics_dict):
         writer.writerows(statistics_dict)
 
 
-def create_csv_file(filename, date_list=[{}], subfolder="", player="", split=False, start_id=1):
+def create_csv_file(filename, date_list=[{}], subfolder="", player="", split_in_two=False, start_id=1, split_in_games=False):
     """
     Create a csv file with a given filename in a given subfolder for a given list of game sessions.
     If subfolder is None, the logs are in different subfolders that should be identified based on their names.
-    If split is True, each log will be split in two so that the two halves can be compared.
+    If split_in_two is True, each log will be split in two so that the two halves can be compared.
     """
-    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, player, split, start_id)
+    fields, statistics_dict = generate_statistics_dict(date_list, subfolder, player, split_in_two, start_id, split_in_games)
     write_to_csv(filename, fields, statistics_dict)
 
 
+# NOT IN USE
 def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[], agent="Blue"):
     """
     Compare statistics to find the agent with the most similar playstyle.
@@ -899,6 +955,7 @@ def find_closest_playstyle(analyzer, da_analyzer, analyzers=[], da_analyzers=[],
     return score_list
 
 
+# NOT IN USE
 def print_playstyle_table(dates={}, agent="Purple", subfolder=""):
     """
     Show an overview of each agent and how similar its playstyle is to each of the other agents' playstyles.
@@ -926,13 +983,15 @@ def print_playstyle_table(dates={}, agent="Purple", subfolder=""):
         print()
 
 
-def add_data_analyzer(date, subfolder="", split_index=None, first=True):
+def add_data_analyzer(date, subfolder="", split_index=None, first=True, prev_split_index=None):
     """
     Create a data analyzer object based on the date and the subfolder.
     split_index should be different from None if only part of the log should be analyzed.
     """
     if split_index == None:
         da = DataAnalyzer(subfolder)
+    elif prev_split_index != None:
+        da = DataAnalyzer(subfolder, prev_split_index, split_index)
     else:
         if first : da = DataAnalyzer(subfolder, None, split_index)
         else : da = DataAnalyzer(subfolder, split_index, None)
@@ -955,25 +1014,38 @@ def print_divider():
     print("\n")
 
 
-def prepare_comparison(dates={}, subfolder="", split=False):
+def prepare_comparison(dates={}, subfolder="", split_in_two=False, split_in_games=False):
     """
     Return analyzers and da_analyzers associated with a specific dates dictionary (usually for one specific player).
-    If split is True, each log is split in two.
+    If split_in_two is True, each log is split in two.
     The function will thus return two analyzers and two da_analyzers per game session (date).
     """
     analyzers = []
     da_analyzers = []
+    no_games = None
+    if split_in_games : no_games = 16
     for game in dates.keys():
         fsm = False
         if "fsm" in game.lower() : fsm = True
-        analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split=split, first=True)
-        analyzers.append(analyzer)
-        da_analyzers.append(analyzer.da)
-        if split:
-            analyzer_2 = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split=True, first=False)
-            analyzers.append(analyzer_2)
-            da_analyzers.append(analyzer_2.da)
-    return analyzers, da_analyzers
+        analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=split_in_two, first=True)
+
+        # If we should split the game log into individual games
+        if split_in_games:
+            # no_games = analyzer.count_games()
+            for i in range(no_games-1):
+                analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=split_in_two, first=True, game_no=i)
+                analyzers.append(analyzer)
+                da_analyzers.append(analyzer.da)
+        
+        # If we should analyze the whole game log or split it in two
+        else:
+            analyzers.append(analyzer)
+            da_analyzers.append(analyzer.da)
+            if split_in_two:
+                analyzer_2 = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=True, first=False)
+                analyzers.append(analyzer_2)
+                da_analyzers.append(analyzer_2.da)
+    return analyzers, da_analyzers, no_games
 
 
 def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
@@ -1264,19 +1336,22 @@ if __name__ == "__main__":
         dates_id_32, dates_id_33, dates_id_34]
 
     # create_csv_file("fMRI-2702.csv", dates_2702, None, player="Blue", start_id=18)
-    # create_csv_file("fMRI-2702-split.csv", dates_2702, None, player="Blue", split=True, start_id=18)
-    # create_csv_file("fMRI-0503-split.csv", dates_0503, None, player="Blue", split=True, start_id=21)
-    # create_csv_file("fMRI-1203-split.csv", dates_1203, None, player="Blue", split=True, start_id=25)
-    # create_csv_file("fMRI-1403-split.csv", dates_1403, None, player="Blue", split=True, start_id=29)
-    # create_csv_file("fMRI-1903-split.csv", dates_1903, None, player="Blue", split=True, start_id=31)
-    # create_csv_file("fMRI-2103-split.csv", dates_2103, None, player="Blue", split=True, start_id=32)
+    # create_csv_file("fMRI-2702-split.csv", dates_2702, None, player="Blue", split_in_two=True, start_id=18)
+    # create_csv_file("fMRI-0503-split.csv", dates_0503, None, player="Blue", split_in_two=True, start_id=21)
+    # create_csv_file("fMRI-1203-split.csv", dates_1203, None, player="Blue", split_in_two=True, start_id=25)
+    # create_csv_file("fMRI-1403-split.csv", dates_1403, None, player="Blue", split_in_two=True, start_id=29)
+    # create_csv_file("fMRI-1903-split.csv", dates_1903, None, player="Blue", split_in_two=True, start_id=31)
+    # create_csv_file("fMRI-2103-split.csv", dates_2103, None, player="Blue", split_in_two=True, start_id=32)
 
-    # create_csv_file("fMRI-2702-agents.csv", dates_2702, None, player="", split=False, start_id=18)
-    # create_csv_file("fMRI-0503-agents.csv", dates_0503, None, player="", split=False, start_id=21)
-    # create_csv_file("fMRI-1203-agents.csv", dates_1203, None, player="", split=False, start_id=25)
-    # create_csv_file("fMRI-1403-agents.csv", dates_1403, None, player="", split=False, start_id=29)
-    # create_csv_file("fMRI-1903-agents.csv", dates_1903, None, player="", split=False, start_id=31)
-    # create_csv_file("fMRI-2103-agents.csv", dates_2103, None, player="", split=False, start_id=32)
+    # create_csv_file("fMRI-2702-agents.csv", dates_2702, None, player="", split_in_two=False, start_id=18)
+    # create_csv_file("fMRI-0503-agents.csv", dates_0503, None, player="", split_in_two=False, start_id=21)
+    # create_csv_file("fMRI-1203-agents.csv", dates_1203, None, player="", split_in_two=False, start_id=25)
+    # create_csv_file("fMRI-1403-agents.csv", dates_1403, None, player="", split_in_two=False, start_id=29)
+    # create_csv_file("fMRI-1903-agents.csv", dates_1903, None, player="", split_in_two=False, start_id=31)
+    # create_csv_file("fMRI-2103-agents.csv", dates_2103, None, player="", split_in_two=False, start_id=32)
+
+    create_csv_file("fMRI-1903-games.csv", dates_1903, None, player="Blue", split_in_two=False, start_id=31, split_in_games=True)
+    create_csv_file("fMRI-2103-games.csv", dates_2103, None, player="Blue", split_in_two=False, start_id=32, split_in_games=True)
 
     # ==========================================================================
 
