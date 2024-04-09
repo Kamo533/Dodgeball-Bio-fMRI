@@ -1,0 +1,17 @@
+,elapsed_time,EventType,BlueBallsLeft,PurpleBallsLeft,BlueLives,PurpleLives,Corner
+517,0.0,ResetScene,0,0,3,3,0.0
+518,4.024,FinishCountDown,0,0,3,3,0.0
+519,5.052,PurplePickedUpBall,0,1,3,3,0.0
+520,5.474,PurplePickedUpBall,0,2,3,3,0.0
+521,6.658,PurpleThrewBall,0,1,3,3,0.0
+522,7.195,PurpleThrewBall,0,0,3,3,0.0
+523,7.337,HitBlue,0,0,2,3,0.0
+524,9.087,PurplePickedUpBall,0,1,2,3,0.0
+525,9.699,PurplePickedUpBall,0,2,2,3,0.0
+526,9.79,PurplePickedUpBall,0,3,2,3,0.0
+527,11.122,PurpleThrewBall,0,2,2,3,0.0
+528,11.183,HitBlue,0,2,1,3,0.0
+529,12.112,PurpleThrewBall,0,1,1,3,0.0
+530,12.137,HitBlue,0,1,0,3,0.0
+531,12.141,GameEnd,0,1,0,3,0.0
+532,14.137,WinScreenStart,0,1,0,3,0.0

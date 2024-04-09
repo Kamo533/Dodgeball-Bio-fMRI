@@ -153,20 +153,20 @@ class AgentBehaviorAnalyzer:
         Split all game logs in two for a specific game session.
         If first is True, the first half should be used, else, the second half should be used.
         """
-        no_games = self.da.count_event_occurences("GameEnd")
-        event_split_index = [i for i, n in enumerate(self.event_list) if n.event_type == "GameEnd"][no_games//2]
+        game_count = self.da.count_event_occurences("GameEnd")
+        event_split_index = [i for i, n in enumerate(self.event_list) if n.event_type == "GameEnd"][game_count//2]
         timestamp = self.event_list[event_split_index].timestamp
         position = self.get_position_data(timestamp)
         pos_split_index = self.pos_list.index(position)
         if first:
             self.event_list = self.event_list[:event_split_index]
             self.pos_list = self.pos_list[:pos_split_index]
-            self.results_data = self.results_data[:no_games//2]
+            self.results_data = self.results_data[:game_count//2]
             self.da = add_data_analyzer(date, subfolder, event_split_index, first)
         else:
             self.event_list = self.event_list[event_split_index:]
             self.pos_list = self.pos_list[pos_split_index:]
-            self.results_data = self.results_data[no_games//2:]
+            self.results_data = self.results_data[game_count//2:]
             self.da = add_data_analyzer(date, subfolder, event_split_index, first)
     
 
@@ -414,9 +414,11 @@ class AgentBehaviorAnalyzer:
         game_end_list = list(filter(lambda event: (event.event_type == "GameEnd"), self.event_list))
         reset_list = list(filter(lambda event: (event.event_type == "ResetScene"), self.event_list))
         time_list = []
+        if len(game_end_list) < 1 : return -1
         if len(reset_list) < 2:
             reset_list = list(filter(lambda event: (event.event_type == "WinScreenStart"), self.event_list))
             reset_list.insert(0, None)
+            if len(reset_list) < 2 : return -1
 
         i = 0
         j = 0
@@ -511,17 +513,17 @@ class AgentBehaviorAnalyzer:
         """
         Count how many times the agent won a game.
         """
+        if self.count_games() < 2:
+            opponent = "Purple"
+            if agent == "Purple" : opponent = "Blue"
+            if self.da.count_event_occurences("Hit" + opponent) == 3:
+                return 1
         iterator = iter(self.results_data)
         count = 0
         for result_line in iterator:
             data = result_line.split(",")
             if "Winner: " + agent in data[1]:
                 count += 1
-        if self.count_games() < 2:
-            opponent = "Purple"
-            if agent == "Purple" : opponent = "Blue"
-            if self.da.count_event_occurences("Hit" + opponent) == 3:
-                return 1
         return count
         
 
@@ -529,17 +531,11 @@ class AgentBehaviorAnalyzer:
         """
         Count the number of games in the game log.
         """
-        return self.da.count_event_occurences("ResetScene") - 1
+        return self.da.count_event_occurences("ResetScene")
     
 
     def get_result(self):
         """ Get result from a single game or from the entire game session """
-        if self.count_games() == 1:
-            if self.da.count_event_occurences("HitBlue") == 3:
-                return "BlueWins"
-            if self.da.count_event_occurences("HitPurple") == 3:
-                return "PurpleWins"
-            return "Tie"
         return str(self.count_wins("Blue")) + "-" + str(self.count_wins("Purple"))
     
 
@@ -587,7 +583,8 @@ class AgentBehaviorAnalyzer:
         """
         facing_list = self.get_instances_of_facing_opponent(agent, margin_degrees)
         move_count = 0
-        prev_pos_entry = facing_list[0]
+        if len(facing_list) > 1 : prev_pos_entry = facing_list[0]
+        else : return -1
         sub_facing_list = []
         for pos_entry in facing_list:
             if pos_entry.timestamp - prev_pos_entry.timestamp < pd.Timedelta(seconds=1):
@@ -813,6 +810,7 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split_in_t
             print("Number of games:", a.count_games())
             print("Player wins:", a.count_wins(agent))
             print("Agent wins:", a.count_wins(opponent))
+            print()
             user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
             user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
             user_dict["Rotation change " + labels[j] + agent_marker] = round(a.calculate_rotation_change_percentage(agent)*100, 3)
@@ -862,11 +860,11 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split_in_t
         if subfolder == None or changed:
             subfolder = "/fMRI_" + next(iter(dates.values()))[:10]
             changed = True
-        all_analyzers, all_da_analyzers, no_games = prepare_comparison(dates, subfolder, split_in_two, split_in_games)
+        all_analyzers, all_da_analyzers, game_count = prepare_comparison(dates, subfolder, split_in_two, split_in_games)
         
         n = 1
         if split_in_two : n = 2
-        if no_games != None : n = no_games
+        if game_count != None : n = game_count
         for j in range(n):
             user_dict = {}
             # FIRST you get all for FSM, THEN for RL (or opposite)
@@ -876,13 +874,13 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split_in_t
             # else : analyzers, da_analyzers = all_analyzers[j::n], all_da_analyzers[j::n]       # all_analyzers[len(labels):], all_da_analyzers[len(labels):]
             analyzers, da_analyzers = all_analyzers[j::n], all_da_analyzers[j::n]
             user_dict["User"] = i
+            print("ID:", i)
             if player == "Blue" : add_statistics(user_dict, player, " (user)", labels)
             else : add_statistics(user_dict, "Purple", " (agent)", labels)
             if player == "":
                 add_statistics(user_dict, "Blue", " (user)", labels)
             statistics_dict.append(user_dict)
-            if no_games != None : i += 1/n
-            elif split_in_two : i += 0.5
+            if split_in_two or game_count != None : i += 1/n
             else : i += 1
     
     fields = ["User"]
@@ -1022,8 +1020,17 @@ def prepare_comparison(dates={}, subfolder="", split_in_two=False, split_in_game
     """
     analyzers = []
     da_analyzers = []
-    no_games = None
-    if split_in_games : no_games = 16
+    game_count = None
+
+    # Analyze the same amount of games for both agents
+    if split_in_games:
+        for game in dates.keys():
+            fsm = False
+            if "fsm" in game.lower() : fsm = True
+            analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=split_in_two, first=True)
+            games = analyzer.count_games()
+            if game_count == None or game_count > games : game_count = games
+    
     for game in dates.keys():
         fsm = False
         if "fsm" in game.lower() : fsm = True
@@ -1031,8 +1038,7 @@ def prepare_comparison(dates={}, subfolder="", split_in_two=False, split_in_game
 
         # If we should split the game log into individual games
         if split_in_games:
-            # no_games = analyzer.count_games()
-            for i in range(no_games-1):
+            for i in range(game_count):
                 analyzer = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=split_in_two, first=True, game_no=i)
                 analyzers.append(analyzer)
                 da_analyzers.append(analyzer.da)
@@ -1045,7 +1051,7 @@ def prepare_comparison(dates={}, subfolder="", split_in_two=False, split_in_game
                 analyzer_2 = AgentBehaviorAnalyzer(dates[game], subfolder, fsm=fsm, split_in_two=True, first=False)
                 analyzers.append(analyzer_2)
                 da_analyzers.append(analyzer_2.da)
-    return analyzers, da_analyzers, no_games
+    return analyzers, da_analyzers, game_count
 
 
 def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
@@ -1335,7 +1341,6 @@ if __name__ == "__main__":
         dates_id_25, dates_id_26, dates_id_27, dates_id_28, dates_id_29, dates_id_30, dates_id_31,
         dates_id_32, dates_id_33, dates_id_34]
 
-    # create_csv_file("fMRI-2702.csv", dates_2702, None, player="Blue", start_id=18)
     # create_csv_file("fMRI-2702-split.csv", dates_2702, None, player="Blue", split_in_two=True, start_id=18)
     # create_csv_file("fMRI-0503-split.csv", dates_0503, None, player="Blue", split_in_two=True, start_id=21)
     # create_csv_file("fMRI-1203-split.csv", dates_1203, None, player="Blue", split_in_two=True, start_id=25)
@@ -1350,8 +1355,12 @@ if __name__ == "__main__":
     # create_csv_file("fMRI-1903-agents.csv", dates_1903, None, player="", split_in_two=False, start_id=31)
     # create_csv_file("fMRI-2103-agents.csv", dates_2103, None, player="", split_in_two=False, start_id=32)
 
-    create_csv_file("fMRI-1903-games.csv", dates_1903, None, player="Blue", split_in_two=False, start_id=31, split_in_games=True)
-    create_csv_file("fMRI-2103-games.csv", dates_2103, None, player="Blue", split_in_two=False, start_id=32, split_in_games=True)
+    # create_csv_file("fMRI-2702-games.csv", dates_2702, None, player="Blue", split_in_two=False, start_id=18, split_in_games=True)
+    # create_csv_file("fMRI-0503-games.csv", dates_0503, None, player="Blue", split_in_two=False, start_id=21, split_in_games=True)
+    # create_csv_file("fMRI-1203-games.csv", dates_1203, None, player="Blue", split_in_two=False, start_id=25, split_in_games=True)
+    # create_csv_file("fMRI-1403-games.csv", dates_1403, None, player="Blue", split_in_two=False, start_id=29, split_in_games=True)
+    # create_csv_file("fMRI-1903-games.csv", dates_1903, None, player="Blue", split_in_two=False, start_id=31, split_in_games=True)
+    # create_csv_file("fMRI-2103-games.csv", dates_2103, None, player="Blue", split_in_two=False, start_id=32, split_in_games=True)
 
     # ==========================================================================
 

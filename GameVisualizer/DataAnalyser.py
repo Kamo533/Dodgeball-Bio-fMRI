@@ -236,7 +236,8 @@ class DataAnalyzer:
                     sequence_duration = sequence_end - sequence_start
                     non_game_time += sequence_duration
         total_time = self.df.elapsed_time.max() - non_game_time
-        return total_time / self.df['EventType'].value_counts()[player + "PickedUpBall"]
+        try : return total_time / self.df['EventType'].value_counts()[player + "PickedUpBall"]
+        except : return -1
     
 
     def get_average_game_length(self):
