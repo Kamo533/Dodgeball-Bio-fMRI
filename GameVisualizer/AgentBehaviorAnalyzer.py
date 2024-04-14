@@ -808,8 +808,8 @@ def generate_statistics_dict(date_list=[{}], subfolder="", player="", split_in_t
                 win_ratio = a.count_wins(agent) / (a.count_wins(agent) + a.count_wins(opponent))
             print(labels[j] + agent_marker)
             print("Number of games:", a.count_games())
-            print("Player wins:", a.count_wins(agent))
-            print("Agent wins:", a.count_wins(opponent))
+            print("Blue wins:", a.count_wins("Blue"))
+            print("Purple wins:", a.count_wins("Agent"))
             print()
             user_dict["Win ratio " + labels[j] + agent_marker] = round(win_ratio*100, 3)
             user_dict["Opponent observation " + labels[j] + agent_marker] = round(a.calculate_percentage_facing_opponent(agent)*100, 3)
@@ -1095,7 +1095,7 @@ if __name__ == "__main__":
     }
     # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
-    # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", both_players=False)
+    create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", "Purple")
 
     # ========================================================================
 
@@ -1330,7 +1330,6 @@ if __name__ == "__main__":
     }
 
 
-    dates_2702_0305 = [dates_id_18, dates_id_19, dates_id_20, dates_id_21, dates_id_22, dates_id_23, dates_id_24]
     dates_2702 = [dates_id_18, dates_id_19, dates_id_20]
     dates_0503 = [dates_id_21, dates_id_22, dates_id_23, dates_id_24]
     dates_1203 = [dates_id_25, dates_id_26, dates_id_27, dates_id_28]
@@ -1361,6 +1360,9 @@ if __name__ == "__main__":
     # create_csv_file("fMRI-1403-games.csv", dates_1403, None, player="Blue", split_in_two=False, start_id=29, split_in_games=True)
     # create_csv_file("fMRI-1903-games.csv", dates_1903, None, player="Blue", split_in_two=False, start_id=31, split_in_games=True)
     # create_csv_file("fMRI-2103-games.csv", dates_2103, None, player="Blue", split_in_two=False, start_id=32, split_in_games=True)
+
+    create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
+    create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
 
     # ==========================================================================
 

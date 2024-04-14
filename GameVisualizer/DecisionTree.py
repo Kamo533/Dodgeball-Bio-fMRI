@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
+from sklearn import tree
 
 col_names = ['Game', 'Precision', 'Pick-up time', 'Throw time', 'Ball hold', 'Throw distance', 'Throw angle', 'Rotation change', 'Opponent observation', 'Approach', 'Retreat', 'Aggressive movements', 'Defensive movements', 'Hiding', 'Court half favor', 'Middle court favor', 'Agent distance', 'Game duration', 'label']
 # load dataset
@@ -10,7 +11,7 @@ data = pd.read_csv("PlaystyleData.csv", header=None, names=col_names)
 print(data.head())
 
 # split dataset in features and target variable
-feature_cols = ['Precision', 'Pick-up time', 'Throw time', 'Ball hold', 'Throw distance', 'Throw angle', 'Rotation change', 'Opponent observation', 'Approach', 'Retreat', 'Aggressive movements', 'Defensive movements', 'Hiding', 'Court half favor', 'Middle court favor', 'Agent distance', 'Game duration']
+feature_cols = ['Precision', 'Pick-up time', 'Throw time', 'Ball hold', 'Throw distance', 'Rotation change', 'Opponent observation', 'Approach', 'Retreat', 'Aggressive movements', 'Defensive movements', 'Hiding', 'Court half favor', 'Middle court favor', 'Agent distance']
 X = data[feature_cols] # Features
 y = data.label # Target variable
 
@@ -28,6 +29,9 @@ y_pred = clf.predict(X_test)
 
 # Model Accuracy, how often is the classifier correct?
 print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+
+text_representation = tree.export_text(clf)
+print(text_representation)
 
 
 
