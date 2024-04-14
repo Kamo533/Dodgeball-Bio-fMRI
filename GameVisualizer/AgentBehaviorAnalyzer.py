@@ -1058,8 +1058,9 @@ def compare_multiple_agents(dates={}, agent="Purple", subfolder=""):
     """
     Print statistics for each item (game session) in the date dictionary.
     """
-    analyzers, da_analyzers = prepare_comparison(dates, subfolder)
+    analyzers, da_analyzers, game_count = prepare_comparison(dates, subfolder)
     print_divider()
+    print("Game count:", game_count)
     compare(analyzers, da_analyzers, dates.keys(), agent)
 
 
@@ -1093,9 +1094,17 @@ if __name__ == "__main__":
         "FSM-V2": FSM2_date,
         "FSM-V0": FSM0_date,
     }
+
+    dates_tournament = {
+        "RL-FSM": "2024-04-14_16-25-51",
+        "IL-FSM": "2024-04-14_16-36-35"
+    }
+
     # show_study_results([dates_pre_study], "Purple", "/PreStudy")
     # print_playstyle_table(dates_pre_study, "Purple", "/PreStudy")
-    create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", "Purple")
+    # create_csv_file("pre_study.csv", [dates_pre_study], "/PreStudy", "Purple")
+    show_study_results([dates_tournament], "Blue", "/FSM-RL")
+    show_study_results([dates_tournament], "Purple", "/FSM-RL")
 
     # ========================================================================
 
@@ -1361,8 +1370,8 @@ if __name__ == "__main__":
     # create_csv_file("fMRI-1903-games.csv", dates_1903, None, player="Blue", split_in_two=False, start_id=31, split_in_games=True)
     # create_csv_file("fMRI-2103-games.csv", dates_2103, None, player="Blue", split_in_two=False, start_id=32, split_in_games=True)
 
-    create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
-    create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
+    #create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
+    #create_csv_file("fMRI-all.csv", dates, None, player="", split_in_two=False, start_id=18)
 
     # ==========================================================================
 
