@@ -1,0 +1,2 @@
+Timestamp,(Position_Blue_X,Position_Blue_Y),Rotation_Blue,(Position_Purple_X,Position_Purple_Y),Rotation_Purple
+11:40:19.189,(-8.9,-67.13),90,(-9,-69.14),90
